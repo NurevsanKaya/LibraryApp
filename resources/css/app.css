@@ -1,12 +1,162 @@
-@import 'tailwindcss';
-
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source "../**/*.blade.php";
-@source "../**/*.js";
-@source "../**/*.vue";
-
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Genel Ayarlar */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
 }
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Header */
+.header {
+    background: white; /* Header arka planını beyaz yap */
+    color: black; /* Header yazı rengini siyah yap */
+    padding: 10px 0;
+    position: fixed; /* Header'ı sabitle */
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Logo Ayarları */
+.logo h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #445799;
+}
+
+/* Navbar Ayarları */
+.navbar {
+    background-color: white;
+    display: flex;
+    justify-content: space-between; /* Navbar öğelerini sağa ve sola hizalar */
+    align-items: center; /* Vertikal hizalama */
+    padding: 10px 20px;
+    z-index: 1000;
+}
+
+
+
+.navbar ul {
+    list-style: none;
+    display: flex;
+    justify-content: center; /* Menü öğelerini ortalayalım */
+    margin: 0;
+    padding: 0;
+}
+
+.navbar ul li {
+    margin: 0 15px;
+}
+
+.navbar ul li a {
+    color: black; /* Navbar yazı rengini siyah yap */
+    font-size: 1rem;
+    transition: color 0.3s;
+}
+
+.navbar ul li a:hover {
+    color:  #b7d1ff; /* Hover rengi */
+}
+
+/* Sosyal medya ikonları */
+.social-icons {
+    display: flex;
+    align-items: center;
+}
+
+.social-icon {
+    font-size: 1.5rem;
+    margin-left: 20px;
+    color: black;
+    transition: color 0.3s;
+}
+
+.social-icon:hover {
+    color: #b7d1ff; /* Hover rengi */
+}
+
+/* Hero Section */
+.hero {
+    background: url('https://source.unsplash.com/1600x900/?beach') no-repeat center center/cover;
+    height: 100vh;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding-top: 60px; /* Navbar yüksekliğine göre üstten boşluk ekle */
+}
+
+.hero-content {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.hero h2 {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #FFD700;
+    color: black;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background: #e6c200;
+}
+/* Hover efekti */
+.hover-effect:hover {
+    color: #b7d1ff !important; /* Hover rengi */
+    transition: color 0.3s ease; /* Geçiş efekti */
+}
+
+
+
+/* Buton için navbar'da sağa hizalama */
+.navbar .navbar-right {
+    display: flex;
+    justify-content: flex-end; /* Sağ tarafa yerleştir */
+    align-items: center;
+}
+
+/* Navbar'daki Buton */
+.custom-button {
+    background-color: #445799;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.custom-button:hover {
+    background-color:#0288d1;
+}
+
