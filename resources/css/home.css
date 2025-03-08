@@ -3,7 +3,7 @@
     position: relative;
     width: 100%;
     height: 100vh; /* Ekranın tamamını kaplar */
-    background-image: url('path-to-your-image.jpg'); /* Resminizin yolu */
+    /*  background-image: url('path-to-your-image.jpg'); Resminizin yolu */
     background-size: cover; /* Resmi ekranı tamamen kaplamak için */
     background-position: center; /* Resmi ortalar */
     background-attachment: fixed; /* Sayfa kaydırıldığında arka planın sabit kalmasını sağlar */
