@@ -118,6 +118,11 @@
                 </button>
             </div>
             
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="hidden flex justify-center items-center p-4">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+            
             <form id="bookForm" method="POST" action="{{ route('admin.books.store') }}">
                 @csrf
                 <input type="hidden" name="_method" id="form-method" value="POST">
@@ -211,7 +216,7 @@
                     <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" onclick="hideModal()">
                         İptal
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600" id="saveButton">
                         Kaydet
                     </button>
                 </div>
@@ -226,6 +231,8 @@
             const modalTitle = document.getElementById('modal-title');
             const form = document.getElementById('bookForm');
             const methodField = document.getElementById('form-method');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const saveButton = document.getElementById('saveButton');
             
             // Form sıfırlama
             form.reset();
@@ -234,18 +241,52 @@
                 modalTitle.textContent = 'Yeni Kitap Ekle';
                 form.action = "{{ route('admin.books.store') }}";
                 methodField.value = 'POST';
+                saveButton.textContent = 'Kaydet';
+                
+                // Modalı göster
+                modal.classList.remove('hidden');
             } 
             else if (mode === 'edit' && bookId) {
                 modalTitle.textContent = 'Kitap Düzenle';
                 form.action = `/admin/books/${bookId}`;
                 methodField.value = 'PUT';
+                saveButton.textContent = 'Güncelle';
                 
-                // Gerçek uygulamada burada AJAX ile kitap verilerini çekip
-                // form alanlarını doldurmak gerekir
+                // Yükleniyor göster
+                loadingSpinner.classList.remove('hidden');
+                document.getElementById('bookForm').classList.add('hidden');
+                
+                // Modalı göster
+                modal.classList.remove('hidden');
+                
+                // AJAX ile kitap verilerini çek
+                fetch(`/admin/books/${bookId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Form alanlarını doldur
+                        document.getElementById('name').value = data.book.name;
+                        document.getElementById('isbn').value = data.book.isbn;
+                        document.getElementById('publication_year').value = data.book.publication_year;
+                        document.getElementById('publisher_id').value = data.book.publisher_id;
+                        document.getElementById('category_id').value = data.book.category_id;
+                        document.getElementById('genres_id').value = data.book.genres_id;
+                        
+                        // Yazarları işaretle
+                        const authorIds = data.authorIds;
+                        document.querySelectorAll('input[name="authors[]"]').forEach(checkbox => {
+                            checkbox.checked = authorIds.includes(parseInt(checkbox.value));
+                        });
+                        
+                        // Yükleniyor gizle
+                        loadingSpinner.classList.add('hidden');
+                        document.getElementById('bookForm').classList.remove('hidden');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching book data:', error);
+                        alert('Kitap verilerini getirirken bir hata oluştu.');
+                        hideModal();
+                    });
             }
-            
-            // Modalı göster
-            modal.classList.remove('hidden');
         }
         
         function hideModal() {

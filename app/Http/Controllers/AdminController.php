@@ -117,4 +117,20 @@ class AdminController extends Controller
         return redirect()->route('admin.books.index')
             ->with('success', 'Kitap başarıyla güncellendi.');
     }
+    
+    /**
+     * Get book data for editing
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getBook($id)
+    {
+        $book = Book::with(['authors'])->findOrFail($id);
+        
+        return response()->json([
+            'book' => $book,
+            'authorIds' => $book->authors->pluck('id')->toArray()
+        ]);
+    }
 }
