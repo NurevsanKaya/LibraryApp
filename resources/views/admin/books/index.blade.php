@@ -4,7 +4,8 @@
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-semibold text-gray-800">Kitap Yönetimi</h1>
-            <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+            <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md" 
+                    onclick="showModal('add')">
                 <i class="fas fa-plus mr-2"></i> Yeni Kitap Ekle
             </button>
         </div>
@@ -27,6 +28,19 @@
             </div>
         </div>
 
+        <!-- Success Message -->
+        @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="block sm:inline">{{ session('success') }}</span>
+                <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                    <svg class="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <title>Kapat</title>
+                        <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                    </svg>
+                </span>
+            </div>
+        @endif
+
         <!-- Books Table -->
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
@@ -48,11 +62,13 @@
                             <td class="py-3 px-4 border-b border-gray-200">{{ $book->name }}</td>
                             <td class="py-3 px-4 border-b border-gray-200">{{ $book->isbn }}</td>
                             <td class="py-3 px-4 border-b border-gray-200">
-                                @if($book->authors->count() > 0)
-                                    {{ $book->authors->pluck('name')->join(', ') }}
-                                @else
-                                    -
-                                @endif
+                            @if($book->authors->count() > 0)
+                                {{ $book->authors->map(function($author) {
+                                    return $author->fullName();
+                                })->join(', ') }}
+                            @else
+                            -
+                            @endif
                             </td>
                             <td class="py-3 px-4 border-b border-gray-200">{{ $book->category->name ?? '-' }}</td>
                             <td class="py-3 px-4 border-b border-gray-200">
@@ -60,7 +76,7 @@
                             </td>
                             <td class="py-3 px-4 border-b border-gray-200">
                                 <div class="flex space-x-2">
-                                    <button class="text-blue-500 hover:text-blue-700">
+                                    <button class="text-blue-500 hover:text-blue-700" onclick="showModal('edit', {{ $book->id }})">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="text-red-500 hover:text-red-700">
@@ -88,4 +104,153 @@
             {{ $books->links() }}
         </div>
     </div>
+
+    <!-- Book Modal -->
+    <div id="bookModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900" id="modal-title">
+                    Yeni Kitap Ekle
+                </h3>
+                <button type="button" class="text-gray-400 hover:text-gray-500" onclick="hideModal()">
+                    <span class="sr-only">Kapat</span>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="bookForm" method="POST" action="{{ route('admin.books.store') }}">
+                @csrf
+                <input type="hidden" name="_method" id="form-method" value="POST">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <!-- Kitap Adı -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Kitap Adı</label>
+                        <input type="text" name="name" id="name" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                            required>
+                    </div>
+                    
+                    <!-- ISBN -->
+                    <div>
+                        <label for="isbn" class="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
+                        <input type="text" name="isbn" id="isbn" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                            required>
+                    </div>
+                    
+                    <!-- Yayın Yılı -->
+                    <div>
+                        <label for="publication_year" class="block text-sm font-medium text-gray-700 mb-1">Yayın Yılı</label>
+                        <input type="number" name="publication_year" id="publication_year" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                            required>
+                    </div>
+                    
+                    <!-- Yayınevi -->
+                    <div>
+                        <label for="publisher_id" class="block text-sm font-medium text-gray-700 mb-1">Yayınevi</label>
+                        <select name="publisher_id" id="publisher_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                            required>
+                            <option value="">Yayınevi Seçin</option>
+                            @foreach($publishers as $publisher)
+                                <option value="{{ $publisher->id }}">
+                                    {{ $publisher->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <!-- Kategori -->
+                    <div>
+                        <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                        <select name="category_id" id="category_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                            required>
+                            <option value="">Kategori Seçin</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}">
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <!-- Tür -->
+                    <div>
+                        <label for="genres_id" class="block text-sm font-medium text-gray-700 mb-1">Tür</label>
+                        <select name="genres_id" id="genres_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                            required>
+                            <option value="">Tür Seçin</option>
+                            @foreach($genres as $genre)
+                                <option value="{{ $genre->id }}">
+                                    {{ $genre->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Yazarlar -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Yazarlar</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        @foreach($authors as $author)
+                            <div class="flex items-center">
+                                <input type="checkbox" name="authors[]" id="author_{{ $author->id }}" value="{{ $author->id }}" 
+                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="author_{{ $author->id }}" class="ml-2 text-sm text-gray-700">{{ $author->fullName() }}</label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                
+                <div class="flex justify-end mt-6 space-x-3">
+                    <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" onclick="hideModal()">
+                        İptal
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                        Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Modal işlemleri için JavaScript
+        function showModal(mode, bookId = null) {
+            const modal = document.getElementById('bookModal');
+            const modalTitle = document.getElementById('modal-title');
+            const form = document.getElementById('bookForm');
+            const methodField = document.getElementById('form-method');
+            
+            // Form sıfırlama
+            form.reset();
+            
+            if (mode === 'add') {
+                modalTitle.textContent = 'Yeni Kitap Ekle';
+                form.action = "{{ route('admin.books.store') }}";
+                methodField.value = 'POST';
+            } 
+            else if (mode === 'edit' && bookId) {
+                modalTitle.textContent = 'Kitap Düzenle';
+                form.action = `/admin/books/${bookId}`;
+                methodField.value = 'PUT';
+                
+                // Gerçek uygulamada burada AJAX ile kitap verilerini çekip
+                // form alanlarını doldurmak gerekir
+            }
+            
+            // Modalı göster
+            modal.classList.remove('hidden');
+        }
+        
+        function hideModal() {
+            const modal = document.getElementById('bookModal');
+            modal.classList.add('hidden');
+        }
+    </script>
 @endsection

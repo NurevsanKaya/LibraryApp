@@ -4,17 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\User;
+use App\Models\Author;
+use App\Models\Genres;
 use App\Models\Borrowing;
 use App\Models\Categories;
+use App\Models\Publisher;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    /**
-     * Display the admin dashboard.
-     *
-     * @return \Illuminate\View\View
-     */
+   
     public function dashboard()
     {
         // Get statistics for dashboard
@@ -38,11 +37,7 @@ class AdminController extends Controller
         ));
     }
 
-    /**
-     * Display the books management page.
-     *
-     * @return \Illuminate\View\View
-     */
+   
     public function books()
     {
         $books = Book::with(['category', 'authors', 'publisher'])
@@ -50,7 +45,76 @@ class AdminController extends Controller
             ->paginate(10);
             
         $categories = Categories::all();
+        $publishers = Publisher::all();
+        $genres = Genres::all();
+        $authors = Author::all();
         
-        return view('admin.books.index', compact('books', 'categories'));
+        return view('admin.books.index', compact(
+            'books', 
+            'categories', 
+            'publishers', 
+            'genres', 
+            'authors'
+        ));
+    }
+    
+    
+    public function storeBook(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'isbn' => 'required|string|max:20|unique:books',
+            'publication_year' => 'required|integer|min:1000|max:' . date('Y'),
+            'publisher_id' => 'required|exists:publishers,id',
+            'genres_id' => 'required|exists:genres,id',
+            'category_id' => 'required|exists:categories,id',
+            'authors' => 'required|array',// authors bir dizi olmalı
+            'authors.*' => 'exists:authors,id',// Dizi içindeki her eleman authors tablosunda olmalı
+        ]);
+        
+        $book = Book::create([
+            'name' => $validated['name'],
+            'isbn' => $validated['isbn'],
+            'publication_year' => $validated['publication_year'],
+            'publisher_id' => $validated['publisher_id'],
+            'genres_id' => $validated['genres_id'],
+            'category_id' => $validated['category_id'],
+        ]);
+        
+        $book->authors()->attach($validated['authors']); //BookAuthors tablosuna yazarlar ekledik
+        
+        return redirect()->route('admin.books.index')
+            ->with('success', 'Kitap başarıyla eklendi.');
+    }
+    
+    
+    public function updateBook(Request $request, $id)
+    {
+        $book = Book::findOrFail($id);
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'isbn' => 'required|string|max:20|unique:books,isbn,' . $id,
+            'publication_year' => 'required|integer|min:1000|max:' . date('Y'),
+            'publisher_id' => 'required|exists:publishers,id',
+            'genres_id' => 'required|exists:genres,id',
+            'category_id' => 'required|exists:categories,id',
+            'authors' => 'required|array',
+            'authors.*' => 'exists:authors,id',
+        ]);
+        
+        $book->update([
+            'name' => $validated['name'],
+            'isbn' => $validated['isbn'],
+            'publication_year' => $validated['publication_year'],
+            'publisher_id' => $validated['publisher_id'],
+            'genres_id' => $validated['genres_id'],
+            'category_id' => $validated['category_id'],
+        ]);
+        
+        $book->authors()->sync($validated['authors']);
+        
+        return redirect()->route('admin.books.index')
+            ->with('success', 'Kitap başarıyla güncellendi.');
     }
 }
