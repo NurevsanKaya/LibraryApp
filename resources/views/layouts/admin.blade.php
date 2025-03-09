@@ -95,6 +95,12 @@
                                 Kitaplar
                             </a>
                         </li>
+                        <li class="mb-3">
+                            <a href="{{ route('admin.stocks.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-md {{ request()->routeIs('admin.stocks.*') ? 'bg-gray-200' : '' }}">
+                                <i class="fas fa-boxes mr-3"></i>
+                                Stok Yönetimi
+                            </a>
+                        </li>
 
                     </ul>
                 </div>
