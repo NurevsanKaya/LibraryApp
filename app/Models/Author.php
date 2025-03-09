@@ -17,4 +17,8 @@ class Author extends Model
     {
         return $this->belongsToMany(Book::class, 'book_authors');
     }
+    public function fullName()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
 }

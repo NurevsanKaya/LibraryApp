@@ -50,6 +50,9 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     
     // Books Management
     Route::get('/books', [AdminController::class, 'books'])->name('admin.books.index');
+    Route::post('/books', [AdminController::class, 'storeBook'])->name('admin.books.store');
+    Route::put('/books/{id}', [AdminController::class, 'updateBook'])->name('admin.books.update');
+    Route::get('/books/{id}', [AdminController::class, 'getBook'])->name('admin.books.get');
    
 });
 
