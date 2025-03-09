@@ -56,7 +56,7 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::get('/books/search', [StockController::class, 'searchBook'])->name('admin.books.search');
     Route::put('/books/{id}', [AdminController::class, 'updateBook'])->name('admin.books.update');
     Route::get('/books/{id}', [AdminController::class, 'getBook'])->name('admin.books.get');
-    Route::delete('/Admin/{id}', [AdminController::class, 'destroy'])->name('Book.destroy');
+    Route::delete('/books/{id}', [AdminController::class, 'destroy'])->name('Book.destroy');
 
 
     // Stok

@@ -1,4 +1,4 @@
-<!-- Book Modal Form -->
+
 <div id="bookModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" x-data="{ open: false }" x-show="open" x-on:keydown.escape.window="open = false">
     <div class="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
         <div class="flex justify-between items-center mb-4">

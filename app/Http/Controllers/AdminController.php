@@ -64,7 +64,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'isbn' => 'required|string|max:20|unique:books',
-            'publication_year' => 'required|integer|min:1000|max:' . date('Y'),
+            'publication_year' => 'required|integer|min:1000|max:' . date('Y'),//Maksimum olarak günümüz yılını (max:date('Y'))yapabiliriz
             'publisher_id' => 'required|exists:publishers,id',
             'genres_id' => 'required|exists:genres,id',
             'category_id' => 'required|exists:categories,id',

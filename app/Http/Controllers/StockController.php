@@ -130,6 +130,7 @@ class StockController extends Controller
             $stockCount = Stock::where('shelf_id', $existingShelf->shelf_id)->count();
             if ($stockCount < 10) {
                 $shelf = Shelf::find($existingShelf->shelf_id);
+                $shelf->stock_count = $stockCount;// normalde shelftte stock_count yok ama biz yazıp ona bir değer atarsak o anlık var oluyor 
                 return response()->json([
                     'shelves' => [$shelf],
                     'message' => 'Aynı kitap bu rafta bulunuyor'

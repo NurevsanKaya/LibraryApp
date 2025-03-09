@@ -330,7 +330,7 @@
 
         async function loadAvailableShelves(bookId) {
             try {
-                const response = await fetch(`/admin/stocks/available-shelves?book_id=${bookId}`);//url ile parametre yollamak istersek ? ile bağlayabiliriz    
+                const response = await fetch(`/admin/stocks/available-shelves?book_id=${bookId}`);//path ile parametre yollamak istersek ? ile bağlayabiliriz    
                 const data = await response.json();
                 
                 const shelfSelect = document.getElementById('shelf_id');
@@ -361,7 +361,7 @@
                 console.error('Raflar yüklenirken hata:', error);
             }
         }
-
+         // burası detay gösterme yeri ama şuan çalışmıyor   
         async function loadStockData(stockId) {
             const spinner = document.getElementById('loadingSpinner');
             spinner.classList.remove('hidden');
