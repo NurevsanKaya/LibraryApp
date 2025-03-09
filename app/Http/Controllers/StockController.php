@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Book;
-use App\Models\Stock;
-use App\Models\Shelf;
 use Illuminate\Http\Request;
+use App\Models\Stock;
+use App\Models\Book;
+use App\Models\Shelf;
+use App\Models\Bookshelf;
 
 class StockController extends Controller
 {
@@ -110,5 +111,73 @@ class StockController extends Controller
         \Log::info('Search result:', ['book' => $book]);
         
         return response()->json(['book' => $book]);
+    }
+
+    /**
+     * Kitap için uygun rafları getir
+     */
+    public function getAvailableShelves(Request $request)
+    {
+        $book = Book::findOrFail($request->book_id);
+        
+        // Önce aynı ISBN'ye sahip kitapların rafını kontrol et
+        $existingShelf = Stock::whereHas('book', function($query) use ($book) {
+            $query->where('isbn', $book->isbn);
+        })->first();
+
+        if ($existingShelf) {
+            // Aynı ISBN'li kitabın rafında yer var mı kontrol et
+            $stockCount = Stock::where('shelf_id', $existingShelf->shelf_id)->count();
+            if ($stockCount < 10) {
+                $shelf = Shelf::find($existingShelf->shelf_id);
+                return response()->json([
+                    'shelves' => [$shelf],
+                    'message' => 'Aynı kitap bu rafta bulunuyor'
+                ]);
+            }
+        }
+
+        // Kategori ve türe göre kitaplıkları bul
+        $bookShelves = Bookshelf::with('shelves.stocks')
+            ->where('category_id', $book->category_id)
+            ->where('genre_id', $book->genres_id)
+            ->get();
+
+        if (!$bookShelves->isEmpty()) {
+            // Tüm rafları al ve doluluk kontrolü yap
+            $shelves = $bookShelves->flatMap->shelves
+                ->filter(function ($shelf) {
+                    return $shelf->stocks->count() < 10;
+                })
+                ->map(function ($shelf) {
+                    $stockCount = $shelf->stocks->count();
+                    $shelf->stock_count = $stockCount;
+                    return $shelf;
+                });
+
+            if (!$shelves->isEmpty()) {
+                return response()->json([
+                    'shelves' => $shelves->values(),
+                    'message' => 'Aynı kategori ve türdeki raflar'
+                ]);
+            }
+        }
+
+        // Eğer uygun raf bulunamazsa boş rafları getir
+        $emptyShelvesFromAllBookshelves = Shelf::with('stocks')
+            ->get()
+            ->filter(function ($shelf) {
+                return $shelf->stocks->count() < 10;
+            })
+            ->map(function ($shelf) {
+                $stockCount = $shelf->stocks->count();
+                $shelf->stock_count = $stockCount;
+                return $shelf;
+            });
+
+        return response()->json([
+            'shelves' => $emptyShelvesFromAllBookshelves->values(),
+            'message' => 'Boş raflar'
+        ]);
     }
 }

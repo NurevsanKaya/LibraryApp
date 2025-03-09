@@ -169,13 +169,13 @@
                     <!-- Raf -->
                     <div>
                         <label for="shelf_id" class="block text-sm font-medium text-gray-700 mb-1">Raf</label>
-                        <select name="shelf_id" id="shelf_id" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Raf Seçin</option>
-                            @foreach($shelves as $shelf)
-                                <option value="{{ $shelf->id }}">{{ $shelf->shelf_number }}</option>
-                            @endforeach
-                        </select>
+                        <div class="relative">
+                            <select name="shelf_id" id="shelf_id" required disabled
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                <option value="">Önce kitap seçin</option>
+                            </select>
+                            <div id="shelfMessage" class="mt-1 text-sm text-gray-500"></div>
+                        </div>
                     </div>
 
                     <!-- Edinme Kaynağı -->
@@ -230,6 +230,7 @@
             const modalTitle = document.getElementById('modal-title');
             const form = document.getElementById('stockForm');
             const bookSearchSection = document.getElementById('bookSearchSection');
+            const shelfSelect = document.getElementById('shelf_id');
             
             if (mode === 'add') {
                 modalTitle.textContent = 'Yeni Stok Ekle';
@@ -237,7 +238,10 @@
                 form.action = "{{ route('admin.stocks.store') }}";
                 document.getElementById('form-method').value = 'POST';
                 bookSearchSection.classList.remove('hidden');
-                generateBarcode(); // Yeni stok eklerken otomatik barkod üret
+                shelfSelect.disabled = true;
+                shelfSelect.innerHTML = '<option value="">Önce kitap seçin</option>';
+                document.getElementById('shelfMessage').textContent = '';
+                generateBarcode();
             } else if (mode === 'edit') {
                 modalTitle.textContent = 'Stok Düzenle';
                 form.action = `/admin/stocks/${stockId}`;
@@ -259,6 +263,8 @@
             document.getElementById('stockForm').reset();
             document.getElementById('bookSearchResults').classList.add('hidden');
             document.getElementById('selectedBookInfo').classList.add('hidden');
+            document.getElementById('shelf_id').disabled = true;
+            document.getElementById('shelfMessage').textContent = '';
             selectedBook = null;
             // Form elemanlarını tekrar aktif et
             Array.from(document.getElementById('stockForm').elements).forEach(element => {
@@ -302,7 +308,7 @@
             }
         }
 
-        function selectBook() {
+        async function selectBook() {
             if (selectedBook) {
                 document.getElementById('selected_book_id').value = selectedBook.id;
                 document.getElementById('bookSearchSection').classList.add('hidden');
@@ -316,6 +322,43 @@
                     <p><strong>Yazar:</strong> ${selectedBook.authors.map(a => `${a.first_name} ${a.last_name}`).join(', ')}</p>
                 `;
                 document.getElementById('selectedBookInfo').classList.remove('hidden');
+
+                // Uygun rafları getir
+                await loadAvailableShelves(selectedBook.id);
+            }
+        }
+
+        async function loadAvailableShelves(bookId) {
+            try {
+                const response = await fetch(`/admin/stocks/available-shelves?book_id=${bookId}`);//url ile parametre yollamak istersek ? ile bağlayabiliriz    
+                const data = await response.json();
+                
+                const shelfSelect = document.getElementById('shelf_id');
+                const shelfMessage = document.getElementById('shelfMessage');
+                
+                // Raf seçimini aktif et
+                shelfSelect.disabled = false;
+                shelfSelect.innerHTML = '<option value="">Raf Seçin</option>';
+                
+                // Rafları listele
+                data.shelves.forEach(shelf => {
+                    const option = document.createElement('option');
+                    option.value = shelf.id;
+                    option.textContent = `${shelf.shelf_number} (${shelf.stock_count}/10 kitap)`;
+                    shelfSelect.appendChild(option);
+                });
+
+                // Mesajı göster
+                shelfMessage.textContent = data.message;
+                shelfMessage.className = 'mt-1 text-sm ' + 
+                    (data.message.includes('Aynı kitap') ? 'text-green-600' : 'text-blue-600');
+
+                // Eğer tek raf varsa ve aynı ISBN'li kitapsa otomatik seç
+                if (data.shelves.length === 1 && data.message.includes('Aynı kitap')) {
+                    shelfSelect.value = data.shelves[0].id;
+                }
+            } catch (error) {
+                console.error('Raflar yüklenirken hata:', error);
             }
         }
 

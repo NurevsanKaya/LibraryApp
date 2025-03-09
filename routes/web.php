@@ -62,9 +62,11 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     // Stok
     Route::get('/stocks', [StockController::class, 'index'])->name('admin.stocks.index');
     Route::post('/stocks', [StockController::class, 'store'])->name('admin.stocks.store');
+    Route::get('/stocks/available-shelves', [StockController::class, 'getAvailableShelves'])->name('admin.stocks.shelves');
     Route::get('/stocks/{stock}', [StockController::class, 'show'])->name('admin.stocks.show');
     Route::put('/stocks/{stock}', [StockController::class, 'update'])->name('admin.stocks.update');
     Route::delete('/stocks/{stock}', [StockController::class, 'destroy'])->name('admin.stocks.destroy');
+    
 });
 
 Route::middleware('auth')->group(function () {
