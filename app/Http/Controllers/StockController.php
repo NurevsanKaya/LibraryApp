@@ -2,25 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Stock;
 use Illuminate\Http\Request;
+use App\Models\Stock;
+use App\Models\Book;
+use App\Models\Shelf;
+use App\Models\Bookshelf;
 
 class StockController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
+        $query = Stock::with(['book', 'shelf']);
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        // Filtrele
+        if ($request->has('status') && $request->status !== '') {
+            $query->where('status', $request->status);
+        }
+
+        // Barkod ile ara
+        if ($request->has('search') && $request->search !== '') {
+            $query->where('barcode', 'like', '%' . $request->search . '%');
+        }
+
+        $stocks = $query->orderBy('id', 'desc')->paginate(10);
+        $shelves = Shelf::all();
+
+        return view('admin.stocks.index', compact('stocks', 'shelves'));
     }
 
     /**
@@ -28,7 +38,20 @@ class StockController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'barcode' => 'required|string|max:50|unique:stocks',
+            'book_id' => 'required|exists:books,id',
+            'shelf_id' => 'required|exists:shelves,id',
+            'acquisition_source' => 'nullable|string|max:255',
+            'acquisition_price' => 'nullable|numeric|min:0',
+            'acquisition_date' => 'nullable|date',
+            'status' => 'required|in:active,borrowed',
+        ]);
+
+        Stock::create($validated);
+
+        return redirect()->route('admin.stocks.index')
+            ->with('success', 'Stok başarıyla eklendi.');
     }
 
     /**
@@ -36,15 +59,8 @@ class StockController extends Controller
      */
     public function show(Stock $stock)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Stock $stock)
-    {
-        //
+        $stock->load(['book', 'shelf']);
+        return response()->json(['stock' => $stock]);
     }
 
     /**
@@ -52,7 +68,20 @@ class StockController extends Controller
      */
     public function update(Request $request, Stock $stock)
     {
-        //
+        $validated = $request->validate([
+            'barcode' => 'required|string|max:50|unique:stocks,barcode,' . $stock->id,
+            'book_id' => 'required|exists:books,id',
+            'shelf_id' => 'required|exists:shelves,id',
+            'acquisition_source' => 'nullable|string|max:255',
+            'acquisition_price' => 'nullable|numeric|min:0',
+            'acquisition_date' => 'nullable|date',
+            'status' => 'required|in:active,borrowed',
+        ]);
+
+        $stock->update($validated);
+
+        return redirect()->route('admin.stocks.index')
+            ->with('success', 'Stok başarıyla güncellendi.');
     }
 
     /**
@@ -60,6 +89,96 @@ class StockController extends Controller
      */
     public function destroy(Stock $stock)
     {
-        //
+        $stock->delete();
+
+        return redirect()->route('admin.stocks.index')
+            ->with('success', 'Stok başarıyla silindi.');
+    }
+
+    /**
+     * Search for a book by ISBN
+     */
+    public function searchBook(Request $request)
+    {
+        \Log::info('Search request received for ISBN: ' . $request->isbn);
+        
+        $book = Book::with(['authors' => function($query) {
+            $query->select('authors.id', 'first_name', 'last_name');
+        }])
+        ->where('isbn', $request->isbn)
+        ->first();
+            
+        \Log::info('Search result:', ['book' => $book]);
+        
+        return response()->json(['book' => $book]);
+    }
+
+    /**
+     * Kitap için uygun rafları getir
+     */
+    public function getAvailableShelves(Request $request)
+    {
+        $book = Book::findOrFail($request->book_id);
+        
+        // Önce aynı ISBN'ye sahip kitapların rafını kontrol et
+        $existingShelf = Stock::whereHas('book', function($query) use ($book) {
+            $query->where('isbn', $book->isbn);
+        })->first();
+
+        if ($existingShelf) {
+            // Aynı ISBN'li kitabın rafında yer var mı kontrol et
+            $stockCount = Stock::where('shelf_id', $existingShelf->shelf_id)->count();
+            if ($stockCount < 10) {
+                $shelf = Shelf::find($existingShelf->shelf_id);
+                $shelf->stock_count = $stockCount;// normalde shelftte stock_count yok ama biz yazıp ona bir değer atarsak o anlık var oluyor 
+                return response()->json([
+                    'shelves' => [$shelf],
+                    'message' => 'Aynı kitap bu rafta bulunuyor'
+                ]);
+            }
+        }
+
+        // Kategori ve türe göre kitaplıkları bul
+        $bookShelves = Bookshelf::with('shelves.stocks')
+            ->where('category_id', $book->category_id)
+            ->where('genre_id', $book->genres_id)
+            ->get();
+
+        if (!$bookShelves->isEmpty()) {
+            // Tüm rafları al ve doluluk kontrolü yap
+            $shelves = $bookShelves->flatMap->shelves
+                ->filter(function ($shelf) {
+                    return $shelf->stocks->count() < 10;
+                })
+                ->map(function ($shelf) {
+                    $stockCount = $shelf->stocks->count();
+                    $shelf->stock_count = $stockCount;
+                    return $shelf;
+                });
+
+            if (!$shelves->isEmpty()) {
+                return response()->json([
+                    'shelves' => $shelves->values(),
+                    'message' => 'Aynı kategori ve türdeki raflar'
+                ]);
+            }
+        }
+
+        // Eğer uygun raf bulunamazsa boş rafları getir
+        $emptyShelvesFromAllBookshelves = Shelf::with('stocks')
+            ->get()
+            ->filter(function ($shelf) {
+                return $shelf->stocks->count() < 10;
+            })
+            ->map(function ($shelf) {
+                $stockCount = $shelf->stocks->count();
+                $shelf->stock_count = $stockCount;
+                return $shelf;
+            });
+
+        return response()->json([
+            'shelves' => $emptyShelvesFromAllBookshelves->values(),
+            'message' => 'Boş raflar'
+        ]);
     }
 }

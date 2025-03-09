@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-   
+
     public function dashboard()
     {
         // Get statistics for dashboard
@@ -21,13 +21,13 @@ class AdminController extends Controller
         $totalUsers = User::count();
         $activeBorrowings = Borrowing::whereNull('return_date')->count();
         $totalCategories = Categories::count();
-        
+
         // Get recent borrowings
         $recentBorrowings = Borrowing::with(['user', 'book'])
             ->latest()
             ->take(5)
             ->get();
-        
+
         return view('admin.dashboard', compact(
             'totalBooks',
             'totalUsers',
@@ -37,41 +37,41 @@ class AdminController extends Controller
         ));
     }
 
-   
+
     public function books()
     {
         $books = Book::with(['category', 'authors', 'publisher'])
             ->orderBy('id', 'desc')
             ->paginate(10);
-            
+
         $categories = Categories::all();
         $publishers = Publisher::all();
         $genres = Genres::all();
         $authors = Author::all();
-        
+
         return view('admin.books.index', compact(
-            'books', 
-            'categories', 
-            'publishers', 
-            'genres', 
+            'books',
+            'categories',
+            'publishers',
+            'genres',
             'authors'
         ));
     }
-    
-    
+
+
     public function storeBook(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'isbn' => 'required|string|max:20|unique:books',
-            'publication_year' => 'required|integer|min:1000|max:' . date('Y'),
+            'publication_year' => 'required|integer|min:1000|max:' . date('Y'),//Maksimum olarak günümüz yılını (max:date('Y'))yapabiliriz
             'publisher_id' => 'required|exists:publishers,id',
             'genres_id' => 'required|exists:genres,id',
             'category_id' => 'required|exists:categories,id',
             'authors' => 'required|array',// authors bir dizi olmalı
             'authors.*' => 'exists:authors,id',// Dizi içindeki her eleman authors tablosunda olmalı
         ]);
-        
+
         $book = Book::create([
             'name' => $validated['name'],
             'isbn' => $validated['isbn'],
@@ -80,18 +80,18 @@ class AdminController extends Controller
             'genres_id' => $validated['genres_id'],
             'category_id' => $validated['category_id'],
         ]);
-        
+
         $book->authors()->attach($validated['authors']); //BookAuthors tablosuna yazarlar ekledik
-        
+
         return redirect()->route('admin.books.index')
             ->with('success', 'Kitap başarıyla eklendi.');
     }
-    
-    
+
+
     public function updateBook(Request $request, $id)
     {
         $book = Book::findOrFail($id);
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'isbn' => 'required|string|max:20|unique:books,isbn,' . $id,
@@ -102,7 +102,7 @@ class AdminController extends Controller
             'authors' => 'required|array',
             'authors.*' => 'exists:authors,id',
         ]);
-        
+
         $book->update([
             'name' => $validated['name'],
             'isbn' => $validated['isbn'],
@@ -111,13 +111,13 @@ class AdminController extends Controller
             'genres_id' => $validated['genres_id'],
             'category_id' => $validated['category_id'],
         ]);
-        
+
         $book->authors()->sync($validated['authors']);
-        
+
         return redirect()->route('admin.books.index')
             ->with('success', 'Kitap başarıyla güncellendi.');
     }
-    
+
     /**
      * Get book data for editing
      *
@@ -127,10 +127,24 @@ class AdminController extends Controller
     public function getBook($id)
     {
         $book = Book::with(['authors'])->findOrFail($id);
-        
+
         return response()->json([
             'book' => $book,
             'authorIds' => $book->authors->pluck('id')->toArray()
         ]);
+    }
+
+    public function destroy($id)
+    {
+        // Favoriyi veri tabanından sil
+        $books = Book::find($id);
+
+        if (!$books) {
+            return redirect()->back()->with('error', 'Kitap bulunamadı.');
+        }
+
+        $books->delete();
+
+        return redirect()->back()->with('success', 'Kitap başarıyla kaldırıldı.');
     }
 }

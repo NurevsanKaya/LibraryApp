@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Library App') }} - Admin Panel</title>
+    <title>KÜTÜPHANE YÖNETİM PANELİ</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -92,7 +92,13 @@
                         <li class="mb-3">
                             <a href="{{ route('admin.books.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-md {{ request()->routeIs('admin.books.*') ? 'bg-gray-200' : '' }}">
                                 <i class="fas fa-book mr-3"></i>
-                                Kitaplar
+                                Kitap Yönetimi
+                            </a>
+                        </li>
+                        <li class="mb-3">
+                            <a href="{{ route('admin.stocks.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-md {{ request()->routeIs('admin.stocks.*') ? 'bg-gray-200' : '' }}">
+                                <i class="fas fa-boxes mr-3"></i>
+                                Stok Yönetimi
                             </a>
                         </li>
 
