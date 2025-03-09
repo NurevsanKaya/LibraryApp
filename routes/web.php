@@ -33,6 +33,7 @@ Route::get('/myaccount', function () {
 Route::get('/contact', function () {
     return view('contact');
 });
+Route::delete('/Admin/{id}', [AdminController::class, 'destroy'])->name('Book.destroy');
 
 
 Route::get('/dashboard', function () {
@@ -44,16 +45,16 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::get('/', function () {
         return redirect()->route('admin.dashboard');
     });
-    
+
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    
+
     // Books Management
     Route::get('/books', [AdminController::class, 'books'])->name('admin.books.index');
     Route::post('/books', [AdminController::class, 'storeBook'])->name('admin.books.store');
     Route::put('/books/{id}', [AdminController::class, 'updateBook'])->name('admin.books.update');
     Route::get('/books/{id}', [AdminController::class, 'getBook'])->name('admin.books.get');
-   
+
 });
 
 Route::middleware('auth')->group(function () {

@@ -4,7 +4,7 @@
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-semibold text-gray-800">Kitap Yönetimi</h1>
-            <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md" 
+            <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
                     onclick="showModal('add')">
                 <i class="fas fa-plus mr-2"></i> Yeni Kitap Ekle
             </button>
@@ -79,9 +79,18 @@
                                     <button class="text-blue-500 hover:text-blue-700" onclick="showModal('edit', {{ $book->id }})">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="text-red-500 hover:text-red-700">
+                                    <!--<button class="text-red-500 hover:text-red-700">
                                         <i class="fas fa-trash"></i>
-                                    </button>
+                                    </button>-->
+
+                                    <!-- Sil Butonu -->
+                                    <form method="post" action="{{ route('Book.destroy', $book->id) }}" style="margin: 0;">
+                                        @csrf
+                                        @method('delete')
+                                        <button class="text-red-500 hover:text-red-700 ml-2" onclick="return confirm('Bu ilanı silmek istediğinize emin misiniz?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                     <button class="text-gray-500 hover:text-gray-700">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -117,46 +126,46 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
+
             <!-- Loading Spinner -->
             <div id="loadingSpinner" class="hidden flex justify-center items-center p-4">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
-            
+
             <form id="bookForm" method="POST" action="{{ route('admin.books.store') }}">
                 @csrf
                 <input type="hidden" name="_method" id="form-method" value="POST">
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <!-- Kitap Adı -->
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Kitap Adı</label>
-                        <input type="text" name="name" id="name" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                        <input type="text" name="name" id="name"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                     </div>
-                    
+
                     <!-- ISBN -->
                     <div>
                         <label for="isbn" class="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
-                        <input type="text" name="isbn" id="isbn" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                        <input type="text" name="isbn" id="isbn"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                     </div>
-                    
+
                     <!-- Yayın Yılı -->
                     <div>
                         <label for="publication_year" class="block text-sm font-medium text-gray-700 mb-1">Yayın Yılı</label>
-                        <input type="number" name="publication_year" id="publication_year" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                        <input type="number" name="publication_year" id="publication_year"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                     </div>
-                    
+
                     <!-- Yayınevi -->
                     <div>
                         <label for="publisher_id" class="block text-sm font-medium text-gray-700 mb-1">Yayınevi</label>
-                        <select name="publisher_id" id="publisher_id" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                        <select name="publisher_id" id="publisher_id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                             <option value="">Yayınevi Seçin</option>
                             @foreach($publishers as $publisher)
@@ -166,12 +175,12 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <!-- Kategori -->
                     <div>
                         <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                        <select name="category_id" id="category_id" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                        <select name="category_id" id="category_id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                             <option value="">Kategori Seçin</option>
                             @foreach($categories as $category)
@@ -181,12 +190,12 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <!-- Tür -->
                     <div>
                         <label for="genres_id" class="block text-sm font-medium text-gray-700 mb-1">Tür</label>
-                        <select name="genres_id" id="genres_id" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                        <select name="genres_id" id="genres_id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                             <option value="">Tür Seçin</option>
                             @foreach($genres as $genre)
@@ -197,21 +206,21 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- Yazarlar -->
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Yazarlar</label>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
                         @foreach($authors as $author)
                             <div class="flex items-center">
-                                <input type="checkbox" name="authors[]" id="author_{{ $author->id }}" value="{{ $author->id }}" 
+                                <input type="checkbox" name="authors[]" id="author_{{ $author->id }}" value="{{ $author->id }}"
                                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                                 <label for="author_{{ $author->id }}" class="ml-2 text-sm text-gray-700">{{ $author->fullName() }}</label>
                             </div>
                         @endforeach
                     </div>
                 </div>
-                
+
                 <div class="flex justify-end mt-6 space-x-3">
                     <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" onclick="hideModal()">
                         İptal
@@ -233,32 +242,32 @@
             const methodField = document.getElementById('form-method');
             const loadingSpinner = document.getElementById('loadingSpinner');
             const saveButton = document.getElementById('saveButton');
-            
+
             // Form sıfırlama
             form.reset();
-            
+
             if (mode === 'add') {
                 modalTitle.textContent = 'Yeni Kitap Ekle';
                 form.action = "{{ route('admin.books.store') }}";
                 methodField.value = 'POST';
                 saveButton.textContent = 'Kaydet';
-                
+
                 // Modalı göster
                 modal.classList.remove('hidden');
-            } 
+            }
             else if (mode === 'edit' && bookId) {
                 modalTitle.textContent = 'Kitap Düzenle';
                 form.action = `/admin/books/${bookId}`;
                 methodField.value = 'PUT';
                 saveButton.textContent = 'Güncelle';
-                
+
                 // Yükleniyor göster
                 loadingSpinner.classList.remove('hidden');
                 document.getElementById('bookForm').classList.add('hidden');
-                
+
                 // Modalı göster
                 modal.classList.remove('hidden');
-                
+
                 // AJAX ile kitap verilerini çek
                 fetch(`/admin/books/${bookId}`)
                     .then(response => response.json())
@@ -270,13 +279,13 @@
                         document.getElementById('publisher_id').value = data.book.publisher_id;
                         document.getElementById('category_id').value = data.book.category_id;
                         document.getElementById('genres_id').value = data.book.genres_id;
-                        
+
                         // Yazarları işaretle
                         const authorIds = data.authorIds;
                         document.querySelectorAll('input[name="authors[]"]').forEach(checkbox => {
                             checkbox.checked = authorIds.includes(parseInt(checkbox.value));
                         });
-                        
+
                         // Yükleniyor gizle
                         loadingSpinner.classList.add('hidden');
                         document.getElementById('bookForm').classList.remove('hidden');
@@ -288,7 +297,7 @@
                     });
             }
         }
-        
+
         function hideModal() {
             const modal = document.getElementById('bookModal');
             modal.classList.add('hidden');
