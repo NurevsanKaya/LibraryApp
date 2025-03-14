@@ -208,17 +208,20 @@
                 </div>
 
                 <!-- Yazarlar -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Yazarlar</label>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        @foreach($authors as $author)
-                            <div class="flex items-center">
-                                <input type="checkbox" name="authors[]" id="author_{{ $author->id }}" value="{{ $author->id }}"
-                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                <label for="author_{{ $author->id }}" class="ml-2 text-sm text-gray-700">{{ $author->fullName() }}</label>
-                            </div>
-                        @endforeach
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Yazarlar</label>
+                        <select name="authors[]" id="authors_select" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 select2-tailwind" 
+                            multiple>
+                            <option></option>
+                            @foreach($authors as $author)
+                                <option value="{{ $author->id }}">{{ $author->fullName() }}</option>
+                            @endforeach
+                        </select>
                     </div>
+                    <!-- Boş alan - dengeleme için -->
+                    <div></div>
                 </div>
 
                 <div class="flex justify-end mt-6 space-x-3">
@@ -254,6 +257,9 @@
 
                 // Modalı göster
                 modal.classList.remove('hidden');
+                
+                // Select2'yi yeniden başlat
+                initSelect2();
             }
             else if (mode === 'edit' && bookId) {
                 modalTitle.textContent = 'Kitap Düzenle';
@@ -269,7 +275,7 @@
                 modal.classList.remove('hidden');
 
                 // AJAX ile kitap verilerini çek
-                fetch(`/admin/books/${bookId}`)// fetch backende istek atıyor
+                fetch(`/admin/books/${bookId}`)
                     .then(response => response.json())
                     .then(data => {
                         // Form alanlarını doldur
@@ -280,20 +286,28 @@
                         document.getElementById('category_id').value = data.book.category_id;
                         document.getElementById('genres_id').value = data.book.genres_id;
 
-                        // Yazarları işaretle
+                        // Yazarları seç
                         const authorIds = data.authorIds;
-                        document.querySelectorAll('input[name="authors[]"]').forEach(checkbox => {
-                            checkbox.checked = authorIds.includes(parseInt(checkbox.value));
-                        });
+                        if ($('#authors_select').length) {
+                            $('#authors_select').val(authorIds).trigger('change');
+                        } else {
+                            // Eski checkbox sistemi için
+                            document.querySelectorAll('input[name="authors[]"]').forEach(checkbox => {
+                                checkbox.checked = authorIds.includes(parseInt(checkbox.value));
+                            });
+                        }
 
                         // Yükleniyor gizle
                         loadingSpinner.classList.add('hidden');
                         document.getElementById('bookForm').classList.remove('hidden');
+                        
+                        // Select2'yi yeniden başlat
+                        initSelect2();
                     })
                     .catch(error => {
-                        console.error('Error fetching book data:', error);
-                        alert('Kitap verilerini getirirken bir hata oluştu.');
+                        console.error('Error:', error);
                         hideModal();
+                        alert('Kitap bilgileri yüklenirken bir hata oluştu.');
                     });
             }
         }
@@ -302,5 +316,51 @@
             const modal = document.getElementById('bookModal');
             modal.classList.add('hidden');
         }
+        
+        // Select2'yi başlat
+        function initSelect2() {
+            $('#authors_select').select2({
+                placeholder: "Yazar seçin veya arayın...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#bookModal'),
+                language: {
+                    noResults: function() {
+                        return "Sonuç bulunamadı";
+                    },
+                    searching: function() {
+                        return "Aranıyor...";
+                    }
+                },
+                // Tailwind CSS sınıflarını ekle
+                templateSelection: formatSelection,
+                templateResult: formatResult
+            });
+            
+            // Select2 container'a Tailwind sınıfları ekle
+            setTimeout(function() {
+                $('.select2-container--default .select2-selection--multiple').addClass('border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500');
+                $('.select2-container--default.select2-container--focus .select2-selection--multiple').addClass('border-blue-500 ring-blue-500');
+                $('.select2-dropdown').addClass('border border-gray-300 rounded-md');
+                $('.select2-search__field').addClass('border border-gray-300 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500');
+            }, 100);
+        }
+        
+        // Seçilen öğelerin formatı
+        function formatSelection(author) {
+            if (!author.id) return author.text;
+            return $('<span class="py-1 px-2 bg-gray-200 text-gray-800 rounded mr-1">' + author.text + '</span>');
+        }
+        
+        // Sonuçların formatı
+        function formatResult(author) {
+            if (!author.id) return author.text;
+            return $('<div class="py-1 px-2 hover:bg-blue-100">' + author.text + '</div>');
+        }
+        
+        // Sayfa yüklendiğinde Select2'yi başlat
+        $(document).ready(function() {
+            initSelect2();
+        });
     </script>
 @endsection
