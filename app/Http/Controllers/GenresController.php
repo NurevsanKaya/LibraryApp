@@ -28,7 +28,19 @@ class GenresController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:genres,name',
+        ], [
+            'name.required' => 'Tür adı zorunludur.',
+            'name.string' => 'Tür adı metin olmalıdır.',
+            'name.max' => 'Tür adı en fazla 255 karakter olabilir.',
+            'name.unique' => 'Bu tür adı zaten kullanılıyor.',
+        ]);
+
+        Genres::create($validated);
+
+        return redirect()->route('admin.metadata')
+            ->with('success', 'Tür başarıyla eklendi.');
     }
 
     /**

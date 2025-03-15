@@ -28,7 +28,19 @@ class PublisherController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:publishers,name',
+        ], [
+            'name.required' => 'Yayınevi adı zorunludur.',
+            'name.string' => 'Yayınevi adı metin olmalıdır.',
+            'name.max' => 'Yayınevi adı en fazla 255 karakter olabilir.',
+            'name.unique' => 'Bu yayınevi adı zaten kullanılıyor.',
+        ]);
+
+        Publisher::create($validated);
+
+        return redirect()->route('admin.metadata')
+            ->with('success', 'Yayınevi başarıyla eklendi.');
     }
 
     /**

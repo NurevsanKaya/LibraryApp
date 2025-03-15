@@ -28,7 +28,19 @@ class CategoriesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name',
+        ], [
+            'name.required' => 'Kategori adı zorunludur.',
+            'name.string' => 'Kategori adı metin olmalıdır.',
+            'name.max' => 'Kategori adı en fazla 255 karakter olabilir.',
+            'name.unique' => 'Bu kategori adı zaten kullanılıyor.',
+        ]);
+
+        Categories::create($validated);
+
+        return redirect()->route('admin.metadata')
+            ->with('success', 'Kategori başarıyla eklendi.');
     }
 
     /**
