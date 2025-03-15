@@ -28,7 +28,22 @@ class AuthorController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+        ], [
+            'first_name.required' => 'Yazar adı zorunludur.',
+            'first_name.string' => 'Yazar adı metin olmalıdır.',
+            'first_name.max' => 'Yazar adı en fazla 255 karakter olabilir.',
+            'last_name.required' => 'Yazar soyadı zorunludur.',
+            'last_name.string' => 'Yazar soyadı metin olmalıdır.',
+            'last_name.max' => 'Yazar soyadı en fazla 255 karakter olabilir.',
+        ]);
+
+        Author::create($validated);
+
+        return redirect()->route('admin.metadata')
+            ->with('success', 'Yazar başarıyla eklendi.');
     }
 
     /**

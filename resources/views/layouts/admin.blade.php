@@ -121,7 +121,12 @@
                                 Stok Yönetimi
                             </a>
                         </li>
-
+                        <li class="mb-3">
+                            <a href="{{ route('admin.metadata') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-md {{ request()->routeIs('admin.metadata') ? 'bg-gray-200' : '' }}">
+                                <i class="fas fa-tags mr-3"></i>
+                                Metadata Yönetimi
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>

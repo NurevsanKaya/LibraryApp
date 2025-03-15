@@ -1,6 +1,108 @@
 @extends('layouts.admin')
 
 @section('content')
+    <style>
+        /* Yayınevi için Select2 özel stil */
+        #publisher_id + .select2-container .select2-selection--single {
+            height: 42px !important;
+            padding: 0.375rem 0.75rem !important;
+            display: flex !important;
+            align-items: center !important;
+            border: 1px solid #d1d5db !important; /* border-gray-300 */
+            border-radius: 0.375rem !important; /* rounded-md */
+        }
+        
+        #publisher_id + .select2-container .select2-selection--single .select2-selection__rendered {
+            line-height: normal !important;
+            padding-left: 0 !important;
+            color: #374151 !important; /* text-gray-700 */
+        }
+        
+        #publisher_id + .select2-container .select2-selection--single .select2-selection__arrow {
+            height: 100% !important;
+            top: 0 !important;
+        }
+        
+        #publisher_id + .select2-container .select2-selection--single .select2-selection__placeholder {
+            color: #6b7280 !important; /* text-gray-500 */
+        }
+        
+        /* Yazarlar için Select2 özel stil */
+        #authors_select + .select2-container .select2-selection--multiple {
+            min-height: 42px !important;
+            border: 1px solid #d1d5db !important; /* border-gray-300 */
+            border-radius: 0.375rem !important; /* rounded-md */
+            padding: 0.375rem 0.75rem !important;
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+        }
+        
+        #authors_select + .select2-container .select2-selection--multiple .select2-selection__rendered {
+            display: inline-flex !important;
+            flex-wrap: wrap !important;
+            padding-left: 0 !important;
+            gap: 0.25rem !important;
+        }
+        
+        #authors_select + .select2-container .select2-selection--multiple .select2-selection__choice {
+            background-color: #e5e7eb !important; /* bg-gray-200 */
+            border: 1px solid #d1d5db !important; /* border-gray-300 */
+            border-radius: 0.25rem !important; /* rounded */
+            padding: 0.25rem 0.5rem !important;
+            margin-top: 0.25rem !important;
+            margin-right: 0.25rem !important;
+            color: #374151 !important; /* text-gray-700 */
+            font-size: 0.875rem !important; /* text-sm */
+        }
+        
+        #authors_select + .select2-container .select2-selection--multiple .select2-selection__choice__remove {
+            color:rgb(30, 71, 154) !important; /* text-gray-500 */
+            margin-right: 0.25rem !important;
+            border-right: none !important;
+        }
+        
+        #authors_select + .select2-container .select2-selection--multiple .select2-selection__choice__remove:hover {
+            background-color: transparent !important;
+            color: #1f2937 !important; /* text-gray-800 */
+        }
+        
+        #authors_select + .select2-container .select2-search--inline .select2-search__field {
+            margin-top: 0 !important;
+            height: 28px !important;
+            font-size: 0.875rem !important; /* text-sm */
+            color: #374151 !important; /* text-gray-700 */
+        }
+        
+        /* Select2 dropdown stil */
+        .select2-dropdown {
+            border: 1px solid #d1d5db !important; /* border-gray-300 */
+            border-radius: 0.375rem !important; /* rounded-md */
+        }
+        
+        .select2-search__field {
+            border: 1px solid #d1d5db !important; /* border-gray-300 */
+            border-radius: 0.25rem !important; /* rounded */
+            padding: 0.375rem 0.75rem !important;
+        }
+        
+        .select2-search__field:focus {
+            outline: none !important;
+            border-color: #3b82f6 !important; /* focus:border-blue-500 */
+            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5) !important; /* focus:ring-blue-500 */
+        }
+        
+        .select2-results__option {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.875rem !important; /* text-sm */
+        }
+        
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #3b82f6 !important; /* bg-blue-500 */
+            color: white !important;
+        }
+    </style>
+
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-semibold text-gray-800">Kitap Yönetimi</h1>
@@ -76,10 +178,10 @@
                             </td>
                             <td class="py-3 px-4 border-b border-gray-200">
                                 <div class="flex space-x-2">
-                                    <button class="text-blue-500 hover:text-blue-700" onclick="showModal('edit', {{ $book->id }})">
+                                   <button class="text-blue-500 hover:text-blue-700" onclick="showModal('edit', {{ $book->id }})">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <!--<button class="text-red-500 hover:text-red-700">
+                                   <!--  <button class="text-red-500 hover:text-red-700">
                                         <i class="fas fa-trash"></i>
                                     </button>-->
 
@@ -165,7 +267,7 @@
                     <div>
                         <label for="publisher_id" class="block text-sm font-medium text-gray-700 mb-1">Yayınevi</label>
                         <select name="publisher_id" id="publisher_id"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 select2-tailwind"
                             required>
                             <option value="">Yayınevi Seçin</option>
                             @foreach($publishers as $publisher)
@@ -319,6 +421,7 @@
         
         // Select2'yi başlat
         function initSelect2() {
+            // Yazarlar için Select2
             $('#authors_select').select2({
                 placeholder: "Yazar seçin veya arayın...",
                 allowClear: true,
@@ -337,10 +440,25 @@
                 templateResult: formatResult
             });
             
-            // Select2 container'a Tailwind sınıfları ekle
+            // Yayınevi için Select2
+            $('#publisher_id').select2({
+                placeholder: "Yayınevi seçin veya arayın...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#bookModal'),
+                language: {
+                    noResults: function() {
+                        return "Sonuç bulunamadı";
+                    },
+                    searching: function() {
+                        return "Aranıyor...";
+                    }
+                }
+            });
+            
+            // Select2 dropdown için genel stil
             setTimeout(function() {
-                $('.select2-container--default .select2-selection--multiple').addClass('border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500');
-                $('.select2-container--default.select2-container--focus .select2-selection--multiple').addClass('border-blue-500 ring-blue-500');
+                // Dropdown ve arama alanı
                 $('.select2-dropdown').addClass('border border-gray-300 rounded-md');
                 $('.select2-search__field').addClass('border border-gray-300 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500');
             }, 100);
@@ -349,13 +467,17 @@
         // Seçilen öğelerin formatı
         function formatSelection(author) {
             if (!author.id) return author.text;
-            return $('<span class="py-1 px-2 bg-gray-200 text-gray-800 rounded mr-1">' + author.text + '</span>');
+            return $('<span class="inline-flex items-center px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded">' + 
+                     '<span>' + author.text + '</span>' +
+                     '</span>');
         }
         
         // Sonuçların formatı
         function formatResult(author) {
             if (!author.id) return author.text;
-            return $('<div class="py-1 px-2 hover:bg-blue-100">' + author.text + '</div>');
+            return $('<div class="py-2 px-3 text-sm hover:bg-blue-100 flex items-center">' + 
+                     '<span>' + author.text + '</span>' +
+                     '</div>');
         }
         
         // Sayfa yüklendiğinde Select2'yi başlat

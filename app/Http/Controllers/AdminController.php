@@ -58,6 +58,23 @@ class AdminController extends Controller
         ));
     }
 
+    /**
+     * Metadata yönetimi sayfasını gösterir (Yayınevi, Kategori, Tür, Yazar)
+     */
+    public function metadata()
+    {
+        $publishers = Publisher::orderBy('name')->get();
+        $categories = Categories::orderBy('name')->get();
+        $genres = Genres::orderBy('name')->get();
+        $authors = Author::orderBy('first_name')->get();
+
+        return view('admin.metadata', compact(
+            'publishers',
+            'categories',
+            'genres',
+            'authors'
+        ));
+    }
 
     public function storeBook(Request $request)
     {

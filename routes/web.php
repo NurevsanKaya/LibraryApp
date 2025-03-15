@@ -5,6 +5,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StockController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Controllers\PublisherController;
+use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\GenresController;
+use App\Http\Controllers\AuthorController;
 
 Route::get('/', function () {
     return view('home');
@@ -66,6 +70,21 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::get('/stocks/{stock}', [StockController::class, 'show'])->name('admin.stocks.show');
     Route::put('/stocks/{stock}', [StockController::class, 'update'])->name('admin.stocks.update');
     Route::delete('/stocks/{stock}', [StockController::class, 'destroy'])->name('admin.stocks.destroy');
+    
+    // Metadata Yönetimi (Yayınevi, Kategori, Tür, Yazar)
+    Route::get('/metadata', [AdminController::class, 'metadata'])->name('admin.metadata');
+    
+    // Yayınevi
+    Route::post('/publishers', [PublisherController::class, 'store'])->name('admin.publishers.store');
+    
+    // Kategori
+    Route::post('/categories', [CategoriesController::class, 'store'])->name('admin.categories.store');
+    
+    // Tür
+    Route::post('/genres', [GenresController::class, 'store'])->name('admin.genres.store');
+    
+    // Yazar
+    Route::post('/authors', [AuthorController::class, 'store'])->name('admin.authors.store');
     
 });
 
