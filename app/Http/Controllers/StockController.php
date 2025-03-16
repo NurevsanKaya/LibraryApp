@@ -75,7 +75,7 @@ class StockController extends Controller
             'acquisition_source' => 'nullable|string|max:255',
             'acquisition_price' => 'nullable|numeric|min:0',
             'acquisition_date' => 'nullable|date',
-            'status' => 'required|in:active,borrowed',
+            
         ]);
 
         $stock->update($validated);
