@@ -39,7 +39,7 @@ class PublisherController extends Controller
 
         Publisher::create($validated);
 
-        return redirect()->route('admin.metadata')
+        return redirect()->route('admin.data.adding')
             ->with('success', 'Yayınevi başarıyla eklendi.');
     }
 

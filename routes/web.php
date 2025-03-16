@@ -72,7 +72,7 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::delete('/stocks/{stock}', [StockController::class, 'destroy'])->name('admin.stocks.destroy');
     
     // Metadata Yönetimi (Yayınevi, Kategori, Tür, Yazar)
-    Route::get('/metadata', [AdminController::class, 'metadata'])->name('admin.metadata');
+    Route::get('/data-adding', [AdminController::class, 'dataAdding'])->name('admin.data.adding');
     
     // Yayınevi
     Route::post('/publishers', [PublisherController::class, 'store'])->name('admin.publishers.store');

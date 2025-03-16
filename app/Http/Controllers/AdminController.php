@@ -59,16 +59,16 @@ class AdminController extends Controller
     }
 
     /**
-     * Metadata yönetimi sayfasını gösterir (Yayınevi, Kategori, Tür, Yazar)
+     * Veri ekleme sayfasını gösterir (Yayınevi, Kategori, Tür, Yazar)
      */
-    public function metadata()
+    public function dataAdding()
     {
         $publishers = Publisher::orderBy('name')->get();
         $categories = Categories::orderBy('name')->get();
         $genres = Genres::orderBy('name')->get();
         $authors = Author::orderBy('first_name')->get();
 
-        return view('admin.metadata', compact(
+        return view('admin.data-adding', compact(
             'publishers',
             'categories',
             'genres',

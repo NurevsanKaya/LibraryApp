@@ -39,7 +39,7 @@ class GenresController extends Controller
 
         Genres::create($validated);
 
-        return redirect()->route('admin.metadata')
+        return redirect()->route('admin.data.adding')
             ->with('success', 'Tür başarıyla eklendi.');
     }
 
