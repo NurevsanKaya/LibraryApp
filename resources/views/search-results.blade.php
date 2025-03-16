@@ -36,7 +36,8 @@
         @foreach($books as $book)
             <li>
                 <strong>Kitap Adı:</strong> {{ $book->name }}<br>
-                <strong>Yazar:</strong> {{ $book->author->name ?? 'Bilinmiyor' }}<br>
+                <strong>Yazar:</strong> {{ $book->authors->map(function ($author){
+                 return $author->fullName();})->join(', ') ?? 'Bilinmiyor' }}<br>
                 <strong>ISBN:</strong> {{ $book->isbn }}<br>
                 <strong>Yayın Yılı:</strong> {{ $book->publication_year ?? 'Belirtilmemiş' }}<br>
             </li>
