@@ -101,7 +101,7 @@
             text-align: justify;
         }
     </style>
-</head>
+
 <body>
 <div class="container">
     <h1>ÇOMÜ Kütüphane ve Dokümantasyon</h1>
