@@ -62,4 +62,20 @@ class BookController extends Controller
     {
         //
     }
+    public function search(Request $request)
+    {
+        $query = $request->input('query'); // Kullanıcının arama sorgusu
+
+        // Kitap adına veya yazar adına göre arama yap
+        $books = Book::where('name', 'LIKE', '%' . $query . '%')
+            ->orWhereHas('authors', function ($q) use ($query) {
+                $q->where('name', 'LIKE', '%' . $query . '%'); // Yazar adına göre arama
+            })
+            ->get();
+
+        // Sonuçları bir view dosyasına gönder
+        return view('search-results', compact('books', 'query'));
+    }
+
 }
+

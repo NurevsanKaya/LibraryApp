@@ -23,7 +23,7 @@
                     </ul>
                 </li>
                 <li><a href="{{ url('/services') }}">HİZMETLER VE OLANAKLAR</a></li>
-                <li><a href="{{ url('/myaccount') }}">KÜTÜPHANE HESABIM</a></li>
+                <li><a href="{{ route('login') }}">KÜTÜPHANE HESABIM</a></li>
 
                 <li><a href="{{ url('/contact') }}">İLETİŞİM</a></li>
             </ul>
@@ -33,4 +33,6 @@
         <a class="btn-getstarted" href="{{ route('login') }}">Giriş Yap</a>
 
     </div>
+
 </header>
+

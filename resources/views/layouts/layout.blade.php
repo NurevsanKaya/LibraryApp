@@ -30,7 +30,7 @@
 
 <body class="index-page">
 
-@include('Navbar')
+@include('navbar')
 
 <main class="main">
     @yield('content')
