@@ -199,15 +199,7 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
 
-                    <!-- Durum -->
-                    <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Durum</label>
-                        <select name="status" id="status" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            <option value="active">Mevcut</option>
-                            <option value="borrowed">Ödünç Verilmiş</option>
-                        </select>
-                    </div>
+                
                 </div>
 
                 <div class="flex justify-end space-x-3">
@@ -361,10 +353,14 @@
                 console.error('Raflar yüklenirken hata:', error);
             }
         }
-         // burası detay gösterme yeri ama şuan çalışmıyor   
+        
         async function loadStockData(stockId) {
             const spinner = document.getElementById('loadingSpinner');
+            const form = document.getElementById('stockForm');
+            
+            // Yükleme başladığında
             spinner.classList.remove('hidden');
+            form.classList.add('hidden');
 
             try {
                 const response = await fetch(`/admin/stocks/${stockId}`);
@@ -372,18 +368,42 @@
 
                 if (data.stock) {
                     const stock = data.stock;
+                    
+                    // Form alanlarını doldur
                     document.getElementById('barcode').value = stock.barcode;
-                    document.getElementById('shelf_id').value = stock.shelf_id;
                     document.getElementById('acquisition_source').value = stock.acquisition_source;
                     document.getElementById('acquisition_price').value = stock.acquisition_price;
                     document.getElementById('acquisition_date').value = stock.acquisition_date;
-                    document.getElementById('status').value = stock.status;
                     document.getElementById('selected_book_id').value = stock.book_id;
+
+                    // Raf seçimini güncelle
+                    const shelfSelect = document.getElementById('shelf_id');
+                    shelfSelect.disabled = false;
+                    
+                    // Mevcut rafı seç
+                    if (stock.shelf) {
+                        await loadAvailableShelves(stock.book_id);
+                        shelfSelect.value = stock.shelf_id;
+                    }
+                    
+                    // Seçilen kitap bilgilerini göster
+                    if (stock.book) {
+                        const selectedBookDetails = document.getElementById('selectedBookDetails');
+                        selectedBookDetails.innerHTML = `
+                            <p><strong>Kitap Adı:</strong> ${stock.book.name}</p>
+                            <p><strong>ISBN:</strong> ${stock.book.isbn}</p>
+                            <p><strong>Yazar:</strong> ${stock.book.authors ? stock.book.authors.map(a => `${a.first_name} ${a.last_name}`).join(', ') : ''}</p>
+                        `;
+                        document.getElementById('selectedBookInfo').classList.remove('hidden');
+                        document.getElementById('bookSearchSection').classList.add('hidden');
+                    }
                 }
             } catch (error) {
-                console.error('Stok verisi yüklenirken hata oluştu:', error);
+                console.error('Stok verisi yüklenirken hata:', error);
             } finally {
+                // Yükleme tamamlandığında
                 spinner.classList.add('hidden');
+                form.classList.remove('hidden');
             }
         }
 

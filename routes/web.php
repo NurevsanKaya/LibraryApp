@@ -73,7 +73,9 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::delete('/stocks/{stock}', [StockController::class, 'destroy'])->name('admin.stocks.destroy');
 
     // Metadata Yönetimi (Yayınevi, Kategori, Tür, Yazar)
-    Route::get('/metadata', [AdminController::class, 'metadata'])->name('admin.metadata');
+
+    Route::get('/data-adding', [AdminController::class, 'dataAdding'])->name('admin.data.adding');
+    
 
     // Yayınevi
     Route::post('/publishers', [PublisherController::class, 'store'])->name('admin.publishers.store');
@@ -86,6 +88,10 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
 
     // Yazar
     Route::post('/authors', [AuthorController::class, 'store'])->name('admin.authors.store');
+
+    
+    // Kullanıcı Yönetimi
+    Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
 
 });
 

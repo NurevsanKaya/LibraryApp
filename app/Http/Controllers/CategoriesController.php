@@ -39,7 +39,7 @@ class CategoriesController extends Controller
 
         Categories::create($validated);
 
-        return redirect()->route('admin.metadata')
+        return redirect()->route('admin.data.adding')
             ->with('success', 'Kategori başarıyla eklendi.');
     }
 

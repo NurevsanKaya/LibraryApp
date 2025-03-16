@@ -1,4 +1,10 @@
 <x-guest-layout>
+
+<div class="text-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-900">Üye ol</h2>
+        <p class="text-sm text-gray-600 mt-2">Kütüphane sistemine hoş geldiniz</p>
+    </div>
+
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
