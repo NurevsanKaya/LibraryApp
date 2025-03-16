@@ -1,4 +1,9 @@
 <x-guest-layout>
+    <div class="text-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-900">Giriş Yap</h2>
+        <p class="text-sm text-gray-600 mt-2">Kütüphane sistemine hoş geldiniz</p>
+    </div>
+
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
