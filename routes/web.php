@@ -86,6 +86,8 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     // Yazar
     Route::post('/authors', [AuthorController::class, 'store'])->name('admin.authors.store');
     
+    // Kullanıcı Yönetimi
+    Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
 });
 
 Route::middleware('auth')->group(function () {
