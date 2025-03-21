@@ -10,6 +10,7 @@ use App\Http\Controllers\PublisherController;
 use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\GenresController;
 use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', function () {
     return view('home');
@@ -91,7 +92,10 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
 
     
     // Kullanıcı Yönetimi
-    Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
+    Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+    Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
 
 });
 
