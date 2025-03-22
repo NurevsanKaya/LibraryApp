@@ -7,6 +7,8 @@ use App\Models\Stock;
 use App\Models\Book;
 use App\Models\Shelf;
 use App\Models\Bookshelf;
+use App\Models\AcquisitionSource;
+use Illuminate\Support\Facades\Log;
 
 class StockController extends Controller
 {
@@ -42,7 +44,7 @@ class StockController extends Controller
             'barcode' => 'required|string|max:50|unique:stocks',
             'book_id' => 'required|exists:books,id',
             'shelf_id' => 'required|exists:shelves,id',
-            'acquisition_source' => 'nullable|string|max:255',
+            'acquisition_source_id' => 'nullable|exists:acquisition_sources,id',
             'acquisition_price' => 'nullable|numeric|min:0',
             'acquisition_date' => 'nullable|date',
             'status' => 'required|in:active,borrowed',
@@ -72,7 +74,7 @@ class StockController extends Controller
             'barcode' => 'required|string|max:50|unique:stocks,barcode,' . $stock->id,
             'book_id' => 'required|exists:books,id',
             'shelf_id' => 'required|exists:shelves,id',
-            'acquisition_source' => 'nullable|string|max:255',
+            'acquisition_source_id' => 'nullable|exists:acquisition_sources,id',
             'acquisition_price' => 'nullable|numeric|min:0',
             'acquisition_date' => 'nullable|date',
             
@@ -100,7 +102,7 @@ class StockController extends Controller
      */
     public function searchBook(Request $request)
     {
-        \Log::info('Search request received for ISBN: ' . $request->isbn);
+        Log::info('Search request received for ISBN: ' . $request->isbn);
         
         $book = Book::with(['authors' => function($query) {
             $query->select('authors.id', 'first_name', 'last_name');
@@ -108,7 +110,7 @@ class StockController extends Controller
         ->where('isbn', $request->isbn)
         ->first();
             
-        \Log::info('Search result:', ['book' => $book]);
+        Log::info('Search result:', ['book' => $book]);
         
         return response()->json(['book' => $book]);
     }

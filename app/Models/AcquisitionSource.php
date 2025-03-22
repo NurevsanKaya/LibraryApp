@@ -9,7 +9,12 @@ class AcquisitionSource extends Model
 {
     use HasFactory;
 
-
     protected $table = 'acquisition_source';
+
     protected $fillable = ['name'];
+
+    public function stocks()
+    {
+        return $this->hasMany(Stock::class, 'acquisition_source_id');
+    }
 }
