@@ -4,6 +4,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StockController;
+use App\Models\AcquisitionSource;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Controllers\PublisherController;
@@ -76,7 +77,7 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     // Metadata Yönetimi (Yayınevi, Kategori, Tür, Yazar)
 
     Route::get('/data-adding', [AdminController::class, 'dataAdding'])->name('admin.data.adding');
-    
+
 
     // Yayınevi
     Route::post('/publishers', [PublisherController::class, 'store'])->name('admin.publishers.store');
@@ -90,7 +91,9 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     // Yazar
     Route::post('/authors', [AuthorController::class, 'store'])->name('admin.authors.store');
 
-    
+    Route::post('/acquisition_source', [AcquisitionSource::class, 'store'])->name('admin.acquisition-sources.store');
+
+
     // Kullanıcı Yönetimi
     Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');

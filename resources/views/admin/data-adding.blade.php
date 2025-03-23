@@ -25,7 +25,7 @@
                     @csrf
                     <div class="mb-4">
                         <label for="publisher_name" class="block text-sm font-medium text-gray-700 mb-1">Yayınevi Adı</label>
-                        <input type="text" name="name" id="publisher_name" 
+                        <input type="text" name="name" id="publisher_name"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                         @error('name')
@@ -36,7 +36,7 @@
                         Ekle
                     </button>
                 </form>
-                
+
                 <!-- Yayınevi Listesi -->
                 <div class="mt-4">
                     <h3 class="text-lg font-medium text-gray-700 mb-2">Mevcut Yayınevleri</h3>
@@ -59,7 +59,7 @@
                     @csrf
                     <div class="mb-4">
                         <label for="category_name" class="block text-sm font-medium text-gray-700 mb-1">Kategori Adı</label>
-                        <input type="text" name="name" id="category_name" 
+                        <input type="text" name="name" id="category_name"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                         @error('name')
@@ -70,7 +70,7 @@
                         Ekle
                     </button>
                 </form>
-                
+
                 <!-- Kategori Listesi -->
                 <div class="mt-4">
                     <h3 class="text-lg font-medium text-gray-700 mb-2">Mevcut Kategoriler</h3>
@@ -93,7 +93,7 @@
                     @csrf
                     <div class="mb-4">
                         <label for="genre_name" class="block text-sm font-medium text-gray-700 mb-1">Tür Adı</label>
-                        <input type="text" name="name" id="genre_name" 
+                        <input type="text" name="name" id="genre_name"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                         @error('name')
@@ -104,7 +104,7 @@
                         Ekle
                     </button>
                 </form>
-                
+
                 <!-- Tür Listesi -->
                 <div class="mt-4">
                     <h3 class="text-lg font-medium text-gray-700 mb-2">Mevcut Türler</h3>
@@ -127,7 +127,7 @@
                     @csrf
                     <div class="mb-4">
                         <label for="author_name" class="block text-sm font-medium text-gray-700 mb-1">Yazar Adı</label>
-                        <input type="text" name="first_name" id="author_name" 
+                        <input type="text" name="first_name" id="author_name"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                         @error('first_name')
@@ -136,7 +136,7 @@
                     </div>
                     <div class="mb-4">
                         <label for="author_surname" class="block text-sm font-medium text-gray-700 mb-1">Yazar Soyadı</label>
-                        <input type="text" name="last_name" id="author_surname" 
+                        <input type="text" name="last_name" id="author_surname"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                         @error('last_name')
@@ -147,7 +147,7 @@
                         Ekle
                     </button>
                 </form>
-                
+
                 <!-- Yazar Listesi -->
                 <div class="mt-4">
                     <h3 class="text-lg font-medium text-gray-700 mb-2">Mevcut Yazarlar</h3>
@@ -161,7 +161,38 @@
                         </ul>
                     </div>
                 </div>
+                <!-- Edinme Kaynağı Formu -->
+                <div class="bg-gray-50 p-4 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Edinme Kaynağı Ekle</h2>
+                    <form action="{{ route('admin.acquisition-sources.store') }}" method="POST">
+                        @csrf
+                        <div class="mb-4">
+                            <label for="source_name" class="block text-sm font-medium text-gray-700 mb-1">Kaynak Adı</label>
+                            <input type="text" name="name" id="source_name"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                   required>
+                            @error('name')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md">
+                            Ekle
+                        </button>
+                    </form>
+
+                    <!-- Edinme Kaynağı Listesi -->
+                    <div class="mt-4">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-4">Mevcut Edinme Kaynakları</h2>
+                        <ul class="divide-y divide-gray-200">
+                            @forelse($acquisition_source as $source)
+                                <li class="py-2">{{ $source->name }}</li>
+                            @empty
+                                <li class="py-2 text-gray-500">Henüz edinme kaynağı eklenmemiş.</li>
+                            @endforelse
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-@endsection 
+@endsection

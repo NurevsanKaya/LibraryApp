@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcquisitionSource;
 use App\Models\Book;
 use App\Models\User;
 use App\Models\Author;
@@ -67,12 +68,14 @@ class AdminController extends Controller
         $categories = Categories::orderBy('name')->get();
         $genres = Genres::orderBy('name')->get();
         $authors = Author::orderBy('first_name')->get();
+        $acquisition_source=AcquisitionSource::orderBy('name')->get();
 
         return view('admin.data-adding', compact(
             'publishers',
             'categories',
             'genres',
-            'authors'
+            'authors',
+            'acquisition_source'
         ));
     }
 
