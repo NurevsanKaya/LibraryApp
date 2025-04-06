@@ -16,22 +16,22 @@
 
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    
+
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    
+
     <!-- Yazarlar kısmı için select2 css -->
     <style>
         .select2-container--default .select2-selection--multiple {
             min-height: 42px;
         }
-        
+
         .select2-container--default .select2-selection--multiple .select2-selection__choice {
             margin-top: 5px;
         }
@@ -131,6 +131,12 @@
                             <a href="{{ route('admin.users.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-md {{ request()->routeIs('admin.users.*') ? 'bg-gray-200' : '' }}">
                                 <i class="fas fa-users mr-3"></i>
                                 Kullanıcı Yönetimi
+                            </a>
+                        </li>
+                        <li class="mb-3">
+                            <a href="{{ route('admin.borrowings.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-md {{ request()->routeIs('admin.borrowings.*') ? 'bg-gray-200' : '' }}">
+                                <i class="fas fa-exchange-alt mr-3"></i>
+                                Kitap Ödünç İşlemleri
                             </a>
                         </li>
                     </ul>

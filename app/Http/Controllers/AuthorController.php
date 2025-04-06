@@ -42,7 +42,7 @@ class AuthorController extends Controller
 
         Author::create($validated);
 
-        return redirect()->route('admin.metadata')
+        return redirect()->route('admin.data.adding')
             ->with('success', 'Yazar başarıyla eklendi.');
     }
 

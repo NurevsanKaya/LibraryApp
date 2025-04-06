@@ -4,7 +4,6 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StockController;
-use App\Models\AcquisitionSource;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Controllers\PublisherController;
@@ -12,6 +11,8 @@ use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\GenresController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\BorrowingController;
+use App\Http\Controllers\AcquisitionSourceController;
 
 Route::get('/', function () {
     return view('home');
@@ -60,7 +61,8 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     // Kitap
     Route::get('/books', [AdminController::class, 'books'])->name('admin.books.index');
     Route::post('/books', [AdminController::class, 'storeBook'])->name('admin.books.store');
-    Route::get('/books/search', [StockController::class, 'searchBook'])->name('admin.books.search');
+    Route::get('/books/stock-search', [StockController::class, 'searchBook'])->name('admin.books.stock.search');
+    Route::get('/books/borrowing-search', [BorrowingController::class, 'searchBooks'])->name('admin.books.borrowing.search');
     Route::put('/books/{id}', [AdminController::class, 'updateBook'])->name('admin.books.update');
     Route::get('/books/{id}', [AdminController::class, 'getBook'])->name('admin.books.get');
     Route::delete('/books/{id}', [AdminController::class, 'destroy'])->name('Book.destroy');
@@ -91,14 +93,21 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     // Yazar
     Route::post('/authors', [AuthorController::class, 'store'])->name('admin.authors.store');
 
-    Route::post('/acquisition_source', [AcquisitionSource::class, 'store'])->name('admin.acquisition-sources.store');
-
+    // Edinme Kaynağı
+    Route::post('/acquisition-sources', [AcquisitionSourceController::class, 'store'])->name('admin.acquisition-sources.store');
 
     // Kullanıcı Yönetimi
     Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
     Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
+
+    // Kitap Ödünç İşlemleri
+    Route::get('/borrowings', [BorrowingController::class, 'index'])->name('admin.borrowings.index');
+    Route::get('/borrowings/create', [BorrowingController::class, 'create'])->name('admin.borrowings.create');
+    Route::post('/borrowings', [BorrowingController::class, 'store'])->name('admin.borrowings.store');
+    Route::get('/borrowings/{id}', [BorrowingController::class, 'show'])->name('admin.borrowings.show');
+    Route::post('/borrowings/{id}/return', [BorrowingController::class, 'returnBook'])->name('admin.borrowings.return');
 
 });
 
