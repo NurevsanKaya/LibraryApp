@@ -78,19 +78,18 @@ class BorrowingController extends Controller
      */
     public function store(Request $request)
     {
-        // Form verilerini logla (debugging için)
-        Log::info('Borrowing store request data:', $request->all());
+        
         
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'book_ids' => 'required|array',
-            'book_ids.*' => 'required|exists:books,id',
+            'book_ids.*' => 'nullable|exists:books,id',
             'borrow_dates' => 'required|array',
-            'borrow_dates.*' => 'required|date',
+            'borrow_dates.*' => 'nullable|date',
             'due_dates' => 'required|array',
-            'due_dates.*' => 'required|date',
+            'due_dates.*' => 'nullable|date',
             'borrow_durations' => 'required|array',
-            'borrow_durations.*' => 'required|integer|min:1|max:365',
+            'borrow_durations.*' => 'nullable|integer|min:1|max:365',
         ]);
         
         // Kullanıcının aktif olduğunu kontrol et
@@ -106,19 +105,12 @@ class BorrowingController extends Controller
                             ->whereNull('return_date')
                             ->count();
         
-        Log::info('User borrowing count:', ['user_id' => $request->user_id, 'borrowing_count' => $userBorrowingCount]);
         
         // Toplam ödünç alınacak kitap sayısı
         $newBooksCount = count(array_filter($request->book_ids));
         
-        // Mevcut + yeni kitaplar toplam limiti aşıyor mu kontrol et
+        // Toplam kitap sayısı limiti kontrolü (örneğin en fazla 5)
         if ($userBorrowingCount + $newBooksCount > 5) { // Maksimum 5 kitap ödünç alabilir
-            Log::warning('Maximum borrowing limit reached for user', [
-                'user_id' => $request->user_id, 
-                'current_count' => $userBorrowingCount,
-                'new_count' => $newBooksCount,
-                'limit' => 5
-            ]);
             return redirect()->back()
                     ->withInput()
                     ->with('error', 'Bu kullanıcı maksimum ödünç alma limitine ulaşacak. En fazla ' . (5 - $userBorrowingCount) . ' kitap daha ödünç verebilirsiniz.');
@@ -130,24 +122,18 @@ class BorrowingController extends Controller
                           ->pluck('book_id')
                           ->toArray();
         
-        if (!empty($borrowedBookIds)) {
-            $borrowedBooks = Book::whereIn('id', $borrowedBookIds)->pluck('name')->implode(', ');
-            return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'Seçtiğiniz kitaplardan bazıları şu anda başka kullanıcılarda. Ödünç verilemeyen kitaplar: ' . $borrowedBooks);
-        }
         
-        $successCount = 0;
-        $errors = [];
         
-        try {
+        
+        
+      
             // Her kitap için ödünç kaydı oluştur
             foreach ($request->book_ids as $index => $bookId) {
-                if (empty($bookId)) continue; // Boş değerler atla
+                if (empty($bookId)) continue; // Seçilmemiş kitap varsa atla
                 
-                try {
+             
                     // Ödünç kaydı oluştur - Borrowing modeline uygun alan adlarını kullan
-                    $borrowing = Borrowing::create([
+                    Borrowing::create([
                         'user_id' => $request->user_id,
                         'book_id' => $bookId,
                         'borrow_date' => $request->borrow_dates[$index],
@@ -155,33 +141,15 @@ class BorrowingController extends Controller
                         'status' => 'active',
                     ]);
                     
-                    Log::info('Borrowing created successfully', ['borrowing_id' => $borrowing->id, 'book_id' => $bookId]);
-                    $successCount++;
-                } catch (\Exception $e) {
-                    $book = Book::find($bookId);
-                    $bookName = $book ? $book->name : 'Bilinmeyen kitap';
-                    $errors[] = "$bookName kitabı için ödünç kaydı oluşturulamadı: " . $e->getMessage();
-                    Log::error('Error creating borrowing record for book', ['book_id' => $bookId, 'error' => $e->getMessage()]);
-                }
+                    
+               
             }
             
-            if ($successCount > 0 && empty($errors)) {
-                return redirect()->route('admin.borrowings.index')
-                        ->with('success', $successCount . ' kitap başarıyla ödünç verildi.');
-            } elseif ($successCount > 0 && !empty($errors)) {
-                return redirect()->route('admin.borrowings.index')
-                        ->with('warning', $successCount . ' kitap başarıyla ödünç verildi, ancak bazı kitaplar için hata oluştu: ' . implode(', ', $errors));
-            } else {
-                return redirect()->back()
-                        ->withInput()
-                        ->with('error', 'Hiçbir kitap ödünç verilemedi. Hatalar: ' . implode(', ', $errors));
-            }
-        } catch (\Exception $e) {
-            Log::error('Error in borrowing store process', ['error' => $e->getMessage()]);
-            return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'Ödünç işlemi kaydedilirken bir hata oluştu: ' . $e->getMessage());
-        }
+            
+            return redirect()
+            ->route('admin.borrowings.index')
+            ->with('success', 'Kitap(lar) başarıyla ödünç verildi.');    
+       
     }
 
     /**
