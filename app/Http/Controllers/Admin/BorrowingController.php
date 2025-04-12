@@ -138,7 +138,7 @@ class BorrowingController extends Controller
                         'book_id' => $bookId,
                         'borrow_date' => $request->borrow_dates[$index],
                         'due_date' => $request->due_dates[$index],
-                        'status' => 'active',
+                        'status' => 'available',
                     ]);
                     
                     
