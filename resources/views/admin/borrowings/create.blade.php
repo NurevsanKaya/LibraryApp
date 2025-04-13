@@ -56,13 +56,14 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Kitap Arama Bölümü -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Kitap Ara (ISBN / İsim) <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kitap Barkodu ile Ara <span class="text-red-500">*</span></label>
                         <div class="flex gap-2">
-                            <input type="text" class="bookSearch flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="ISBN veya kitap adı...">
+                            <input type="text" class="bookSearch flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Kitap barkodunu girin...">
                             <button type="button" class="searchBookBtn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
                                 <i class="fas fa-search mr-2"></i> Ara
                             </button>
                         </div>
+                        <p class="text-xs text-gray-500 mt-1">Lütfen kitabın barkodunu girin</p>
                         <input type="hidden" name="stock_ids[]" class="selected-stock-id">
                     </div>
 
@@ -292,80 +293,73 @@
     });
 
     async function searchBook(bookEntry) {
-        const searchTerm = bookEntry.find('.bookSearch').val();
-        if (!searchTerm) return;
+        const barcode = bookEntry.find('.bookSearch').val();
+        if (!barcode) {
+            alert('Lütfen bir barkod girin!');
+            return;
+        }
 
         const resultsDiv = bookEntry.find('.bookSearchResults');
         const resultContent = bookEntry.find('.bookResult');
-        resultContent.html('<div class="text-center py-4"><div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div><p class="mt-2 text-sm text-gray-500">Aranıyor...</p></div>');
+        resultContent.html('<div class="text-center py-4"><div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div><p class="mt-2 text-sm text-gray-500">Barkod aranıyor...</p></div>');
         resultsDiv.removeClass('hidden');
 
         try {
-            const response = await fetch(`/admin/books/borrowing-search?query=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`/admin/books/borrowing-search?query=${encodeURIComponent(barcode)}`);
             const data = await response.json();
             console.log('Search API response:', data); // Debug için API yanıtını konsola yazdır
 
-            if (data.books && data.books.length > 0) {
+            if (data.success && data.books && data.books.length > 0) {
                 let booksHtml = '<div class="space-y-2">';
+                
+                // Başarı mesajı göster
+                booksHtml += '<div class="bg-green-50 text-green-800 p-2 rounded mb-2 text-sm">Barkod ile kitap bulundu.</div>';
                 
                 data.books.forEach(book => {
                     // Kitabın kullanılabilir stokları
                     const availableStocks = book.stocks.filter(stock => stock.status === 'available');
                     
-                    if (availableStocks.length === 0) {
-                        // Kitabın stoku yoksa ya da hepsi ödünç verilmiş
+                    // Barkodla eşleşen stokları göster
+                    availableStocks.forEach(stock => {
+                        // Bu stok ID'si zaten seçilmiş mi kontrol et
+                        const isAlreadySelected = selectedStocks.some(selectedStock => selectedStock && selectedStock.id === stock.id);
+                        
+                        const isSelectable = !isAlreadySelected;
+                        
+                        let statusClass = isSelectable ? 'text-green-600' : 'text-red-600';
+                        let stockClass = isSelectable ? 'border-green-200 hover:bg-green-50' : 'border-red-200 bg-red-50 cursor-not-allowed';
+                        let statusMessage = isAlreadySelected ? 'Bu kopya zaten seçilmiş' : 'Stokta mevcut';
+                        
                         booksHtml += `
-                            <div class="border border-red-200 bg-red-50 rounded p-3 flex justify-between items-center cursor-not-allowed">
+                            <div class="border ${stockClass} rounded p-3 flex justify-between items-center">
                                 <div>
                                     <p class="font-medium">${book.name || book.title}</p>
                                     <p class="text-sm text-gray-600">Yazar: ${book.authors.map(a => `${a.first_name} ${a.last_name}`).join(', ')}</p>
                                     <p class="text-sm text-gray-600">ISBN: ${book.isbn || 'Belirtilmemiş'}</p>
-                                    <p class="text-xs text-red-600">Bu kitabın kullanılabilir stoku bulunmamaktadır</p>
+                                    <p class="text-sm font-medium">Barkod: ${stock.barcode || 'Belirtilmemiş'}</p>
+                                    <p class="text-xs ${statusClass}">
+                                        ${statusMessage}
+                                    </p>
                                 </div>
+                                ${isSelectable ? `<button type="button" onclick='selectStock(${JSON.stringify(book).replace(/'/g, "\\'")}, ${JSON.stringify(stock).replace(/'/g, "\\'")}, ${$('.book-entry').index(bookEntry)})' class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">Seç</button>` : ''}
                             </div>
                         `;
-                    } else {
-                        // Kitabın kullanılabilir stokları varsa her biri için bir satır göster
-                        availableStocks.forEach(stock => {
-                            // Bu stok ID'si zaten seçilmiş mi kontrol et
-                            const isAlreadySelected = selectedStocks.some(selectedStock => selectedStock && selectedStock.id === stock.id);
-                            
-                            const isSelectable = !isAlreadySelected;
-                            const stockClass = isSelectable ? 'border-green-200 hover:bg-green-50' : 'border-red-200 bg-red-50 cursor-not-allowed';
-                            
-                            let statusMessage = '';
-                            if (isAlreadySelected) {
-                                statusMessage = 'Bu kopya zaten seçilmiş';
-                            } else {
-                                statusMessage = 'Stokta mevcut';
-                            }
-                            
-                            booksHtml += `
-                                <div class="border ${stockClass} rounded p-3 flex justify-between items-center">
-                                    <div>
-                                        <p class="font-medium">${book.name || book.title}</p>
-                                        <p class="text-sm text-gray-600">Yazar: ${book.authors.map(a => `${a.first_name} ${a.last_name}`).join(', ')}</p>
-                                        <p class="text-sm text-gray-600">ISBN: ${book.isbn || 'Belirtilmemiş'}</p>
-                                        <p class="text-sm text-gray-600">Barkod: ${stock.barcode || 'Belirtilmemiş'}</p>
-                                        <p class="text-xs ${isSelectable ? 'text-green-600' : 'text-red-600'}">
-                                            ${statusMessage}
-                                        </p>
-                                    </div>
-                                    ${isSelectable ? `<button type="button" onclick='selectStock(${JSON.stringify(book).replace(/'/g, "\\'")}, ${JSON.stringify(stock).replace(/'/g, "\\'")}, ${$('.book-entry').index(bookEntry)})' class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">Seç</button>` : ''}
-                                </div>
-                            `;
-                        });
-                    }
+                    });
                 });
                 
                 booksHtml += '</div>';
                 resultContent.html(booksHtml);
             } else {
-                resultContent.html('<p class="text-red-500 text-center py-4">Kitap bulunamadı</p>');
+                // Hata mesajını göster
+                resultContent.html(`<div class="bg-red-50 text-red-800 p-4 rounded text-center">
+                    <p class="font-medium">Kitap bulunamadı</p>
+                    <p class="text-sm mt-1">${data.message || 'Bu barkoda sahip kullanılabilir bir kitap bulunamadı.'}</p>
+                    <p class="text-sm mt-2">Lütfen barkodu kontrol edip tekrar deneyin.</p>
+                </div>`);
             }
         } catch (error) {
             console.error('Book search error:', error); // Hata durumunda konsola yazdır
-            resultContent.html('<p class="text-red-500 text-center py-4">Arama sırasında bir hata oluştu</p>');
+            resultContent.html('<div class="bg-red-50 text-red-800 p-4 rounded text-center"><p class="font-medium">Arama sırasında bir hata oluştu</p><p class="text-sm mt-1">Lütfen daha sonra tekrar deneyin veya sistem yöneticisiyle iletişime geçin.</p></div>');
         }
     }
 

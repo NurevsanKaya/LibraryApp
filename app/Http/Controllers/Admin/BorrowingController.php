@@ -296,6 +296,7 @@ class BorrowingController extends Controller
     
     /**
      * Kitap arama API endpoint'i - Ödünç vermeler için özel
+     * Sadece barkod ile arama yapar
      */
     public function borrowingSearch(Request $request)
     {
@@ -304,45 +305,46 @@ class BorrowingController extends Controller
         if (!$query) {
             return response()->json([
                 'books' => [], 
-                'borrowedBookIds' => [],
-                'unavailableBookIds' => []
+                'message' => 'Lütfen bir barkod girin',
+                'success' => false
             ]);
         }
         
-        // Kitapları ISBN veya ada göre ara ve kullanılabilir stoklarını getir
-        $books = Book::with(['authors', 'stocks' => function($q) {
-                $q->where('status', 'available');
-            }])
-            ->where(function($q) use ($query) {
-                $q->where('isbn', 'like', "%{$query}%")
-                  ->orWhere('name', 'like', "%{$query}%")
-                  ->orWhereHas('authors', function($subq) use ($query) {
-                      $subq->where('first_name', 'like', "%{$query}%")
-                        ->orWhere('last_name', 'like', "%{$query}%");
-                  });
-            })
-            ->limit(10)
+        // Sadece barkod ile stok araması yap
+        $stocksByBarcode = Stock::with(['book.authors', 'shelf'])
+            ->where('barcode', 'like', "%{$query}%")
+            ->where('status', 'available')
             ->get();
+        
+        // Barkod ile eşleşme bulundu mu?
+        if ($stocksByBarcode->isEmpty()) {
+            return response()->json([
+                'books' => [],
+                'message' => 'Bu barkoda sahip kitap bulunamadı.',
+                'success' => false
+            ]);
+        }
+        
+        // Stokların kitaplarını topla ve unique hale getir
+        $bookIds = $stocksByBarcode->pluck('book_id')->unique()->toArray();
+        
+        // Bu kitapları tüm detaylarıyla getir
+        $books = Book::with(['authors', 'stocks' => function($q) use ($query) {
+            $q->where('status', 'available')
+              ->where('barcode', 'like', "%{$query}%");
+        }])
+        ->whereIn('id', $bookIds)
+        ->get();
         
         // Her kitap için kullanılabilir stok sayısını hesapla
         $books->each(function($book) {
             $book->available_stock = $book->stocks->where('status', 'available')->count();
         });
         
-        // Şu anda ödünç verilmiş kitapları bul
-        $borrowedStockIds = Borrowing::whereNull('return_date')
-                            ->pluck('stock_id')
-                            ->toArray();
-        
-        // Stokta olmayan veya müsait stoğu olmayan kitapları tespit et
-        $unavailableBookIds = Book::whereDoesntHave('stocks', function($query) {
-                $query->where('status', 'available');
-            })->pluck('id')->toArray();
-        
         return response()->json([
             'books' => $books,
-            'borrowedBookIds' => $borrowedStockIds,
-            'unavailableBookIds' => $unavailableBookIds
+            'success' => true,
+            'message' => 'Barkod ile kitap bulundu'
         ]);
     }
 
@@ -364,5 +366,35 @@ class BorrowingController extends Controller
         });
 
         return response()->json(['results' => $users]);
+    }
+
+    /**
+     * Kitap iade tarihini uzatma işlemi
+     */
+    public function extendDueDate(Request $request, $id)
+    {
+        $borrowing = Borrowing::findOrFail($id);
+        
+        // Eğer kitap zaten iade edildiyse veya süre zaten uzatıldıysa hata döndür
+        if ($borrowing->return_date !== null) {
+            return redirect()->back()
+                    ->with('error', 'Bu kitap zaten iade edilmiş, süre uzatılamaz.');
+        }
+        
+        if ($borrowing->extended_return_date !== null) {
+            return redirect()->back()
+                    ->with('error', 'Bu kitabın süresi daha önce uzatılmış.');
+        }
+        
+        // Teslim tarihini 7 gün uzat
+        $extendedDate = Carbon::parse($borrowing->due_date)->addDays(7);
+        
+        // Uzatılmış tarihi kaydet
+        $borrowing->update([
+            'extended_return_date' => $extendedDate->format('Y-m-d'),
+        ]);
+        
+        return redirect()->route('admin.borrowings.index')
+                ->with('success', 'Kitap teslim tarihi 7 gün uzatıldı.');
     }
 }
