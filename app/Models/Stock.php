@@ -25,4 +25,8 @@ class Stock extends Model
     {
         return $this->belongsTo(AcquisitionSource::class, 'acquisition_source_id');
     }
+    public function borrowings()
+    {
+        return $this->hasMany(Borrowing::class);
+    }
 }

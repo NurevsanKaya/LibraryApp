@@ -64,7 +64,7 @@
                             <td class="py-3 px-4 border-b border-gray-200">{{ $stock->acquisition_date }}</td>
                             <td class="py-3 px-4 border-b border-gray-200">
                                 <span class="px-2 py-1 text-xs rounded-full {{ $stock->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                    {{ $stock->status === 'active' ? 'Mevcut' : 'Ödünç Verilmiş' }}
+                                    {{ $stock->status === 'available' ? 'Mevcut' : 'Ödünç Verilmiş' }}
                                 </span>
                             </td>
                             <td class="py-3 px-4 border-b border-gray-200">
@@ -178,11 +178,20 @@
                         </div>
                     </div>
 
+                   
                     <!-- Edinme Kaynağı -->
                     <div>
-                        <label for="acquisition_source" class="block text-sm font-medium text-gray-700 mb-1">Edinme Kaynağı</label>
-                        <input type="text" name="acquisition_source" id="acquisition_source"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <label for="acquisition_source" class="block text-sm font-medium text-gray-700 mb-1">Edinme Kaynağı</label>
+                        <select name="acquisition_source" id="acquisition_source"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 select2-tailwind"
+                            required>
+                            <option value="">Elde Edinme Kaynağı Seçin</option>
+                            @foreach($acquisitionSources as $as)
+                                <option value="{{ $as->id }}">
+                                    {{ $as->name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <!-- Edinme Fiyatı -->
@@ -266,7 +275,10 @@
 
         async function searchBook() {
             const isbn = document.getElementById('isbnSearch').value;
-            if (!isbn) return;
+            if (!isbn) {
+                alert('Lütfen bir ISBN numarası girin');
+                return;
+            }
 
             const spinner = document.getElementById('loadingSpinner');
             const resultsDiv = document.getElementById('bookSearchResults');
@@ -276,25 +288,42 @@
             resultsDiv.classList.add('hidden');
 
             try {
-                const response = await fetch(`/admin/books/search?isbn=${isbn}`);
+                console.log('Arama yapılıyor:', isbn);
+                const response = await fetch(`/admin/books/stock-search?isbn=${encodeURIComponent(isbn.trim())}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP hata! durum: ${response.status}`);
+                }
+                
                 const data = await response.json();
-                console.log(data);
+                console.log('Sunucu yanıtı:', data);
 
                 if (data.book) {
                     selectedBook = data.book;
                     resultContent.innerHTML = `
                         <p><strong>Kitap Adı:</strong> ${data.book.name}</p>
                         <p><strong>ISBN:</strong> ${data.book.isbn}</p>
-                        <p><strong>Yazar:</strong> ${data.book.authors.map(a => `${a.first_name} ${a.last_name}`).join(', ')}</p>
+                        <p><strong>Yazar:</strong> ${data.book.authors ? data.book.authors.map(a => `${a.first_name} ${a.last_name}`).join(', ') : 'Belirtilmemiş'}</p>
                     `;
                     resultsDiv.classList.remove('hidden');
+                    document.getElementById('selectBookButton').classList.remove('hidden');
                 } else {
-                    resultContent.innerHTML = '<p class="text-red-500">Kitap bulunamadı</p>';
+                    console.log('Kitap bulunamadı. Aranan ISBN:', isbn);
+                    resultContent.innerHTML = `
+                        <p class="text-red-500">Bu ISBN numarasına (${isbn}) sahip kitap bulunamadı.</p>
+                        <p class="text-sm text-gray-500">Lütfen ISBN numarasını kontrol edin ve tekrar deneyin.</p>
+                    `;
                     resultsDiv.classList.remove('hidden');
+                    document.getElementById('selectBookButton').classList.add('hidden');
                 }
             } catch (error) {
-                resultContent.innerHTML = '<p class="text-red-500">Bir hata oluştu</p>';
+                console.error('Arama hatası:', error);
+                resultContent.innerHTML = `
+                    <p class="text-red-500">Arama sırasında bir hata oluştu:</p>
+                    <p class="text-sm text-gray-500">${error.message}</p>
+                `;
                 resultsDiv.classList.remove('hidden');
+                document.getElementById('selectBookButton').classList.add('hidden');
             } finally {
                 spinner.classList.add('hidden');
             }

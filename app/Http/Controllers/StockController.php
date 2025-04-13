@@ -9,6 +9,7 @@ use App\Models\Shelf;
 use App\Models\Bookshelf;
 use App\Models\AcquisitionSource;
 use Illuminate\Support\Facades\Log;
+use Laravel\Pail\ValueObjects\Origin\Console;
 
 class StockController extends Controller
 {
@@ -31,8 +32,12 @@ class StockController extends Controller
 
         $stocks = $query->orderBy('id', 'desc')->paginate(10);
         $shelves = Shelf::all();
-
-        return view('admin.stocks.index', compact('stocks', 'shelves'));
+        $acquisitionSources = AcquisitionSource::all();
+        return view('admin.stocks.index', 
+        compact('stocks',
+                     'shelves',
+                                'acquisitionSources'
+                    ));
     }
 
     /**
@@ -98,21 +103,43 @@ class StockController extends Controller
     }
 
     /**
-     * Search for a book by ISBN
+     * Search for a book by ISBN or name
      */
     public function searchBook(Request $request)
     {
-        Log::info('Search request received for ISBN: ' . $request->isbn);
+        Log::info('Arama isteği alındı:', [
+            'isbn' => $request->isbn,
+            'tüm_parametreler' => $request->all()
+        ]);
         
-        $book = Book::with(['authors' => function($query) {
+        $query = Book::with(['authors' => function($query) {
             $query->select('authors.id', 'first_name', 'last_name');
-        }])
-        ->where('isbn', $request->isbn)
-        ->first();
-            
-        Log::info('Search result:', ['book' => $book]);
+        }]);
+
+        if ($request->has('isbn')) {
+            // Tam eşleşme için 'like' operatörünü kaldırıyoruz
+            $query->where('isbn', $request->isbn);
+        }
+
+        // SQL sorgusunu logla
+        Log::info('SQL Sorgusu:', [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings()
+        ]);
+
+        $book = $query->first();
+
+        // Sonucu logla
+        Log::info('Arama sonucu:', [
+            'kitap_bulundu' => !is_null($book),
+            'kitap_detayları' => $book
+        ]);
         
-        return response()->json(['book' => $book]);
+        return response()->json([
+            'book' => $book,
+            'success' => !is_null($book),
+            'message' => $book ? 'Kitap bulundu.' : 'Kitap bulunamadı.'
+        ]);
     }
 
     /**

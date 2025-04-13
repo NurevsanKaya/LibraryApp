@@ -32,8 +32,12 @@ class Book extends Model
         return $this->belongsToMany(Author::class, 'book_authors');
     }
     
+    public function stocks()
+    {
+        return $this->hasMany(Stock::class);
+    }
     public function borrowings()
     {
-        return $this->hasMany(Borrowing::class);
+        return $this->hasManyThrough(Borrowing::class, Stock::class);
     }
 }

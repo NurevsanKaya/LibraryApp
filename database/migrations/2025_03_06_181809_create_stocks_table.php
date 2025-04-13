@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('acquisition_source')->nullable();
             $table->decimal('acquisition_price', 10, 2)->nullable();
             $table->date('acquisition_date')->nullable();
-            $table->enum('status', ['active', 'borrowed'])->default('active');
+            $table->enum('status', ['available', 'borrowed'])->default('available');
             $table->timestamps();
         });
     }

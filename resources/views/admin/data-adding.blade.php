@@ -161,8 +161,10 @@
                         </ul>
                     </div>
                 </div>
-                <!-- Edinme Kaynağı Formu -->
-                <div class="bg-gray-50 p-4 rounded-lg shadow">
+                
+            </div>
+            <!-- Edinme Kaynağı Formu -->
+            <div class="bg-gray-50 p-4 rounded-lg shadow">
                     <h2 class="text-xl font-semibold text-gray-700 mb-4">Edinme Kaynağı Ekle</h2>
                     <form action="{{ route('admin.acquisition-sources.store') }}" method="POST">
                         @csrf
@@ -192,7 +194,6 @@
                         </ul>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
 @endsection
