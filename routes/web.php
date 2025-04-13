@@ -107,10 +107,11 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::get('/borrowings', [BorrowingController::class, 'index'])->name('admin.borrowings.index');
     Route::get('/borrowings/create', [BorrowingController::class, 'create'])->name('admin.borrowings.create');
     Route::post('/borrowings', [BorrowingController::class, 'store'])->name('admin.borrowings.store');
-    Route::get('/borrowings/search-users', [BorrowingController::class, 'searchUsers'])->name('admin.borrowings.search.users');
+   Route::get('/borrowings/search-users', [BorrowingController::class, 'searchUsers'])->name('admin.borrowings.search.users');
     Route::get('/borrowings/{id}', [BorrowingController::class, 'show'])->name('admin.borrowings.show');
     Route::post('/borrowings/{id}/return', [BorrowingController::class, 'returnBook'])->name('admin.borrowings.return');
-
+    Route::post('/borrowings/{id}/extend', [BorrowingController::class, 'extendDueDate'])->name('admin.borrowings.extend');
+    
 });
 
 Route::middleware('auth')->group(function () {

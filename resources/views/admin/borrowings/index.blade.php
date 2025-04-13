@@ -76,6 +76,9 @@
                         Teslim Tarihi
                     </th>
                     <th class="py-3 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Uzatma Tarihi
+                    </th>
+                    <th class="py-3 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         İade Tarihi
                     </th>
                     <th class="py-3 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -101,19 +104,26 @@
                         <td class="py-4 px-4 border-b border-gray-200">{{ \Carbon\Carbon::parse($borrowing->borrow_date)->format('d.m.Y') }}</td>
                         <td class="py-4 px-4 border-b border-gray-200">{{ \Carbon\Carbon::parse($borrowing->due_date)->format('d.m.Y') }}</td>
                         <td class="py-4 px-4 border-b border-gray-200">
+                            {{ $borrowing->extended_return_date ? \Carbon\Carbon::parse($borrowing->extended_return_date)->format('d.m.Y') : '-' }}
+                        </td>
+                        <td class="py-4 px-4 border-b border-gray-200">
                             {{ $borrowing->return_date ? \Carbon\Carbon::parse($borrowing->return_date)->format('d.m.Y') : '-' }}
                         </td>
                         <td class="py-4 px-4 border-b border-gray-200">
                             @php
                                 $today = \Carbon\Carbon::now();
                                 $dueDate = \Carbon\Carbon::parse($borrowing->due_date);
+                                $extendedDate = $borrowing->extended_return_date ? \Carbon\Carbon::parse($borrowing->extended_return_date) : null;
                                 $statusClass = '';
                                 $statusText = '';
 
                                 if ($borrowing->return_date) {
                                     $statusClass = 'bg-green-100 text-green-800';
                                     $statusText = 'İade Edildi';
-                                } elseif ($today->gt($dueDate)) {
+                                } elseif ($extendedDate && $today->gt($extendedDate)) {
+                                    $statusClass = 'bg-red-100 text-red-800';
+                                    $statusText = 'Gecikmiş';
+                                } elseif ($today->gt($dueDate) && !$extendedDate) {
                                     $statusClass = 'bg-red-100 text-red-800';
                                     $statusText = 'Gecikmiş';
                                 } else {
@@ -126,20 +136,32 @@
                             </span>
                         </td>
                         <td class="py-4 px-4 border-b border-gray-200">
-                            @if(!$borrowing->return_date)<!--return date yoksa-->
-                                <button type="button"
-                                        onclick="openReturnModal({{ $borrowing->id }})"
-                                        class="text-blue-500 hover:text-blue-700">
-                                    <i class="fas fa-undo mr-1"></i> İade Al
-                                </button>
-                            @else
-                                <span class="text-gray-400">İşlem Yapılamaz</span>
-                            @endif
+                            <div class="flex flex-col space-y-2">
+                                @if(!$borrowing->return_date)<!--iade edilmemiş-->
+                                    <button type="button"
+                                            onclick="openReturnModal({{ $borrowing->id }})"
+                                            class="text-blue-500 hover:text-blue-700">
+                                        <i class="fas fa-undo mr-1"></i> İade Al
+                                    </button>
+                                    
+                                    @if(!$borrowing->extended_return_date)<!--süre uzatılmamış-->
+                                        <button type="button"
+                                                onclick="extendDueDate({{ $borrowing->id }})"
+                                                class="text-green-500 hover:text-green-700">
+                                            <i class="fas fa-calendar-plus mr-1"></i> Süreyi Uzat
+                                        </button>
+                                    @else
+                                        <span class="text-gray-400 text-xs">Süre zaten uzatılmış</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400 text-xs">İşlem Yapılamaz</span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="py-4 px-4 border-b border-gray-200 text-center text-gray-500">
+                        <td colspan="9" class="py-4 px-4 border-b border-gray-200 text-center text-gray-500">
                             Kayıt bulunamadı
                         </td>
                     </tr>
@@ -192,6 +214,34 @@
 
         // Modal'ı göster
         document.getElementById('returnBookModal').classList.remove('hidden');
+    }
+
+    function extendDueDate(borrowingId) {
+        // Kullanıcıya onay sor
+        if (confirm("Bu kitabın iade süresi 7 gün uzatılacak. Emin misiniz?")) {
+            // Form oluştur
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/borrowings/${borrowingId}/extend`;
+            
+            // CSRF token ekle
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = '{{ csrf_token() }}';
+            form.appendChild(csrfToken);
+            
+            // Method ekle
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'POST';
+            form.appendChild(methodInput);
+            
+            // Formu sayfaya ekle ve gönder
+            document.body.appendChild(form);
+            form.submit();
+        }
     }
 
     function filterBorrowings() {
