@@ -64,6 +64,9 @@
                         Kitap Adı
                     </th>
                     <th class="py-3 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Raf
+                    </th>
+                    <th class="py-3 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         Kullanıcı
                     </th>
                     <th class="py-3 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -86,7 +89,14 @@
             <tbody>
                 @forelse($borrowings as $borrowing)
                     <tr>
-                        <td class="py-4 px-4 border-b border-gray-200">{{ $borrowing->book->name}}</td>
+                        <td class="py-4 px-4 border-b border-gray-200">{{ $borrowing->stock->book->name }}</td>
+                        <td class="py-4 px-4 border-b border-gray-200">
+                            @if($borrowing->stock->shelf)
+                                {{ $borrowing->stock->shelf->shelf_number ?? '-' }}
+                            @else
+                                -
+                            @endif
+                        </td>
                         <td class="py-4 px-4 border-b border-gray-200">{{ $borrowing->user->name }}</td>
                         <td class="py-4 px-4 border-b border-gray-200">{{ \Carbon\Carbon::parse($borrowing->borrow_date)->format('d.m.Y') }}</td>
                         <td class="py-4 px-4 border-b border-gray-200">{{ \Carbon\Carbon::parse($borrowing->due_date)->format('d.m.Y') }}</td>
@@ -129,7 +139,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="py-4 px-4 border-b border-gray-200 text-center text-gray-500">
+                        <td colspan="8" class="py-4 px-4 border-b border-gray-200 text-center text-gray-500">
                             Kayıt bulunamadı
                         </td>
                     </tr>

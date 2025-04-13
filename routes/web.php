@@ -62,7 +62,8 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::get('/books', [AdminController::class, 'books'])->name('admin.books.index');
     Route::post('/books', [AdminController::class, 'storeBook'])->name('admin.books.store');
     Route::get('/books/stock-search', [StockController::class, 'searchBook'])->name('admin.books.stock.search');
-    Route::get('/books/borrowing-search', [BorrowingController::class, 'searchBooks'])->name('admin.books.borrowing.search');
+    Route::get('/books/search', [BookController::class, 'search'])->name('admin.books.search');
+    Route::get('/books/borrowing-search', [BorrowingController::class, 'borrowingSearch'])->name('admin.books.borrowing-search');
     Route::put('/books/{id}', [AdminController::class, 'updateBook'])->name('admin.books.update');
     Route::get('/books/{id}', [AdminController::class, 'getBook'])->name('admin.books.get');
     Route::delete('/books/{id}', [AdminController::class, 'destroy'])->name('Book.destroy');

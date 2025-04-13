@@ -36,4 +36,8 @@ class Book extends Model
     {
         return $this->hasMany(Stock::class);
     }
+    public function borrowings()
+    {
+        return $this->hasManyThrough(Borrowing::class, Stock::class);
+    }
 }

@@ -9,6 +9,8 @@ use App\Models\Book;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Models\Stock;
+use Illuminate\Support\Facades\DB;
 
 class BorrowingController extends Controller
 {
@@ -17,7 +19,7 @@ class BorrowingController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Borrowing::with(['user', 'book']);
+        $query = Borrowing::with(['user', 'stock.book']);
         
         // Durum filtreleme
         if ($request->has('status') && $request->status) {
@@ -35,7 +37,7 @@ class BorrowingController extends Controller
         if ($request->has('search') && $request->search) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->whereHas('book', function($query) use ($search) {
+                $q->whereHas('stock.book', function($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
                         ->orWhere('isbn', 'like', "%{$search}%");
                 })
@@ -58,19 +60,19 @@ class BorrowingController extends Controller
     public function create()
     {
         // Tüm kitapları getir
-        $books = Book::all();
+        $books = Book::with('stocks')->get();
         
         // Aktif kullanıcıları getir (üye rolündekileri)
         $users = User::where('role_id', 2)
                     ->where('is_active', 1)
                     ->get();
         
-        // Şu anda ödünç verilmiş kitapları bul (iade edilmeyenler)
-        $borrowedBookIds = Borrowing::whereNull('return_date')
-                            ->pluck('book_id')
+        // Şu anda ödünç verilmiş stokları bul (iade edilmeyenler)
+        $borrowedStockIds = Borrowing::whereNull('return_date')
+                            ->pluck('stock_id')
                             ->toArray();
         
-        return view('admin.borrowings.create', compact('books', 'users', 'borrowedBookIds'));
+        return view('admin.borrowings.create', compact('books', 'users', 'borrowedStockIds'));
     }
 
     /**
@@ -78,12 +80,10 @@ class BorrowingController extends Controller
      */
     public function store(Request $request)
     {
-        
-        
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'book_ids' => 'required|array',
-            'book_ids.*' => 'nullable|exists:books,id',
+            'stock_ids' => 'required|array',
+            'stock_ids.*' => 'nullable|exists:stocks,id',
             'borrow_dates' => 'required|array',
             'borrow_dates.*' => 'nullable|date',
             'due_dates' => 'required|array',
@@ -105,9 +105,8 @@ class BorrowingController extends Controller
                             ->whereNull('return_date')
                             ->count();
         
-        
         // Toplam ödünç alınacak kitap sayısı
-        $newBooksCount = count(array_filter($request->book_ids));
+        $newBooksCount = count(array_filter($request->stock_ids));
         
         // Toplam kitap sayısı limiti kontrolü (örneğin en fazla 5)
         if ($userBorrowingCount + $newBooksCount > 5) { // Maksimum 5 kitap ödünç alabilir
@@ -116,40 +115,80 @@ class BorrowingController extends Controller
                     ->with('error', 'Bu kullanıcı maksimum ödünç alma limitine ulaşacak. En fazla ' . (5 - $userBorrowingCount) . ' kitap daha ödünç verebilirsiniz.');
         }
         
-        // Kitapların ödünç durumunu kontrol et
-        $borrowedBookIds = Borrowing::whereNull('return_date')
-                          ->whereIn('book_id', $request->book_ids)
-                          ->pluck('book_id')
-                          ->toArray();
+        // Stok kayıtlarının durumunu kontrol et
+        $unavailableStocks = [];
+        foreach ($request->stock_ids as $stockId) {
+            if (empty($stockId)) continue;
+            
+            $stock = Stock::find($stockId);
+            if (!$stock || $stock->status !== 'available') {
+                $unavailableStocks[] = $stockId;
+            }
+        }
         
+        if (!empty($unavailableStocks)) {
+            return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Seçtiğiniz bazı kitap stokları artık müsait değil. Lütfen tekrar kontrol edin.');
+        }
         
+        // Her stok için ödünç kaydı oluştur
+        $createdCount = 0;
+        $errors = [];
+        DB::beginTransaction();
         
-        
-        
-      
-            // Her kitap için ödünç kaydı oluştur
-            foreach ($request->book_ids as $index => $bookId) {
-                if (empty($bookId)) continue; // Seçilmemiş kitap varsa atla
+        try {
+            foreach ($request->stock_ids as $index => $stockId) {
+                if (empty($stockId)) continue; // Seçilmemiş stok varsa atla
                 
-             
-                    // Ödünç kaydı oluştur - Borrowing modeline uygun alan adlarını kullan
+                try {
+                    // Stok durumunu güncelle
+                    $stock = Stock::findOrFail($stockId);
+                    $stock->update(['status' => 'borrowed']);
+                    
+                    // Ödünç kaydı oluştur
                     Borrowing::create([
                         'user_id' => $request->user_id,
-                        'book_id' => $bookId,
+                        'stock_id' => $stockId,
                         'borrow_date' => $request->borrow_dates[$index],
                         'due_date' => $request->due_dates[$index],
-                        'status' => 'available',
+                        'status' => 'active', // Durumu active olarak ayarla
                     ]);
                     
-                    
-               
+                    $createdCount++;
+                } catch (\Exception $e) {
+                    // Hata loglama
+                    Log::error('Ödünç verme hatası: ' . $e->getMessage());
+                    $errors[] = 'Kitap ID: ' . $stockId . ' - Hata: ' . $e->getMessage();
+                }
             }
             
-            
+            if ($createdCount > 0) {
+                DB::commit();
+                // Başarı mesajını ödünç alınan kitap sayısına göre ayarla
+                $successMessage = $createdCount == 1 
+                    ? 'Kitap başarıyla ödünç verildi.' 
+                    : $createdCount . ' adet kitap başarıyla ödünç verildi.';
+                
+                return redirect()
+                    ->route('admin.borrowings.index')
+                    ->with('success', $successMessage);
+            } else {
+                DB::rollBack();
+                Log::error('Hiçbir kitap ödünç verilemedi - Hatalar: ' . implode(', ', $errors));
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with('error', 'Kitaplar ödünç verilemedi. Teknik bir sorun oluştu.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Genel ödünç verme hatası: ' . $e->getMessage());
             return redirect()
-            ->route('admin.borrowings.index')
-            ->with('success', 'Kitap(lar) başarıyla ödünç verildi.');    
-       
+                ->back()
+                ->withInput()
+                ->with('error', 'İşlem sırasında bir hata oluştu: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -157,7 +196,7 @@ class BorrowingController extends Controller
      */
     public function show($id)
     {
-        $borrowing = Borrowing::with(['user', 'book'])->findOrFail($id);
+        $borrowing = Borrowing::with(['user', 'stock.book'])->findOrFail($id);
         return view('admin.borrowings.show', compact('borrowing'));
     }
 
@@ -184,6 +223,11 @@ class BorrowingController extends Controller
             'status' => 'completed',
         ]);
         
+        // Stok durumunu güncelle - Stok tekrar kullanılabilir yapılıyor
+        if ($borrowing->stock) {
+            $borrowing->stock->update(['status' => 'available']);
+        }
+        
         // Gecikme kontrolü ve ceza işlemi (opsiyonel)
         $dueDate = Carbon::parse($borrowing->due_date);
         $returnDate = Carbon::parse($request->return_date);
@@ -199,35 +243,106 @@ class BorrowingController extends Controller
     }
 
     /**
-     * Kitap arama API endpoint'i
+     * Kitap arama API endpoint'i - Stok bazında arama
      */
     public function searchBooks(Request $request)
     {
         $query = $request->input('query');
         
         if (!$query) {
-            return response()->json(['books' => [], 'borrowedBookIds' => []]);
+            return response()->json([
+                'books' => [], 
+                'borrowedBookIds' => [],
+                'unavailableBookIds' => []
+            ]);
         }
         
-        // ISBN veya kitap adına göre ara
-        $books = Book::with('authors')
-                    ->where('isbn', 'like', "%{$query}%")
-                    ->orWhere('name', 'like', "%{$query}%")
-                    ->orWhereHas('authors', function($q) use ($query) {
-                        $q->where('first_name', 'like', "%{$query}%")
-                          ->orWhere('last_name', 'like', "%{$query}%");
-                    })
-                    ->limit(10)
-                    ->get();
+        // Kitapları ISBN veya ada göre ara
+        $books = Book::with(['authors', 'stocks' => function($q) {
+                $q->where('status', 'available');
+            }])
+            ->where(function($q) use ($query) {
+                $q->where('isbn', 'like', "%{$query}%")
+                  ->orWhere('name', 'like', "%{$query}%")
+                  ->orWhereHas('authors', function($subq) use ($query) {
+                      $subq->where('first_name', 'like', "%{$query}%")
+                        ->orWhere('last_name', 'like', "%{$query}%");
+                  });
+            })
+            ->limit(10)
+            ->get();
         
-        // Şu anda ödünç verilmiş kitapları bul
-        $borrowedBookIds = Borrowing::whereNull('return_date')
-                            ->pluck('book_id')
+        // Her kitap için müsait stok sayısını ekle
+        $books->each(function($book) {
+            $book->available_stock = $book->stocks->count();
+        });
+        
+        // Şu anda ödünç verilmiş kitapları bul (stock_id'leri üzerinden)
+        $borrowedStockIds = Borrowing::whereNull('return_date')
+                            ->pluck('stock_id')
                             ->toArray();
+        
+        // Stokta olmayan kitapları tespit et
+        $unavailableBookIds = Book::whereDoesntHave('stocks', function($query) {
+                $query->where('status', 'available');
+            })->pluck('id')->toArray();
         
         return response()->json([
             'books' => $books,
-            'borrowedBookIds' => $borrowedBookIds
+            'borrowedBookIds' => $borrowedStockIds,
+            'unavailableBookIds' => $unavailableBookIds
+        ]);
+    }
+    
+    /**
+     * Kitap arama API endpoint'i - Ödünç vermeler için özel
+     */
+    public function borrowingSearch(Request $request)
+    {
+        $query = $request->input('query');
+        
+        if (!$query) {
+            return response()->json([
+                'books' => [], 
+                'borrowedBookIds' => [],
+                'unavailableBookIds' => []
+            ]);
+        }
+        
+        // Kitapları ISBN veya ada göre ara ve kullanılabilir stoklarını getir
+        $books = Book::with(['authors', 'stocks' => function($q) {
+                $q->where('status', 'available');
+            }])
+            ->where(function($q) use ($query) {
+                $q->where('isbn', 'like', "%{$query}%")
+                  ->orWhere('name', 'like', "%{$query}%")
+                  ->orWhereHas('authors', function($subq) use ($query) {
+                      $subq->where('first_name', 'like', "%{$query}%")
+                        ->orWhere('last_name', 'like', "%{$query}%");
+                  });
+            })
+            ->limit(10)
+            ->get();
+        
+        // Her kitap için kullanılabilir stok sayısını hesapla
+        $books->each(function($book) {
+            $book->available_stock = $book->stocks->where('status', 'available')->count();
+        });
+        
+        // Şu anda ödünç verilmiş kitapları bul
+        $borrowedStockIds = Borrowing::whereNull('return_date')
+                            ->pluck('stock_id')
+                            ->toArray();
+        
+        // Stokta olmayan veya müsait stoğu olmayan kitapları tespit et
+        $unavailableBookIds = Book::whereDoesntHave('stocks', function($query) {
+                $query->where('status', 'available');
+            })->pluck('id')->toArray();
+        
+        return response()->json([
+            'books' => $books,
+            'borrowedBookIds' => $borrowedStockIds,
+            'unavailableBookIds' => $unavailableBookIds
         ]);
     }
 

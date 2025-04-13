@@ -24,7 +24,7 @@ class AdminController extends Controller
         $totalCategories = Categories::count();
 
         // Get recent borrowings
-        $recentBorrowings = Borrowing::with(['user', 'book'])
+        $recentBorrowings = Borrowing::with(['user', 'stock.book'])
             ->latest()
             ->take(5)
             ->get();

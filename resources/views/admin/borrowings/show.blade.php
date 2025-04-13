@@ -89,14 +89,14 @@
                                 @php
                                     $activeLoans = \App\Models\Borrowing::where('user_id', $borrowing->user_id)
                                             ->whereNull('return_date')
-                                            ->with('book')
+                                            ->with('stock.book')
                                             ->get();
                                 @endphp
                                 
                                 @forelse($activeLoans as $loan)
                                     <tr>
                                         <td class="px-3 py-2 text-xs text-gray-900">
-                                            {{ $loan->book->title ?? $loan->book->name }}
+                                            {{ $loan->stock->book->title ?? $loan->stock->book->name }}
                                         </td>
                                         <td class="px-3 py-2 text-xs text-gray-900">
                                             {{ \Carbon\Carbon::parse($loan->due_date)->format('d.m.Y') }}
@@ -121,8 +121,8 @@
         <div class="flex flex-col md:flex-row md:space-x-6">
             <div class="md:w-1/3 flex justify-center mb-4 md:mb-0">
                 <div class="w-48 h-64 bg-gray-300 rounded-md flex items-center justify-center">
-                    @if(isset($borrowing->book->cover_image) && $borrowing->book->cover_image)
-                        <img src="{{ asset('storage/' . $borrowing->book->cover_image) }}" alt="{{ $borrowing->book->title ?? 'Kitap Kapağı' }}" class="h-full w-full object-cover rounded-md">
+                    @if(isset($borrowing->stock->book->cover_image) && $borrowing->stock->book->cover_image)
+                        <img src="{{ asset('storage/' . $borrowing->stock->book->cover_image) }}" alt="{{ $borrowing->stock->book->title ?? 'Kitap Kapağı' }}" class="h-full w-full object-cover rounded-md">
                     @else
                         <span class="text-gray-500"><i class="fas fa-book fa-4x"></i></span>
                     @endif
@@ -133,13 +133,13 @@
                 <dl class="grid grid-cols-1 gap-y-3">
                     <div class="grid grid-cols-2">
                         <dt class="text-sm font-medium text-gray-500">Kitap Adı:</dt>
-                        <dd class="text-sm text-gray-900">{{ $borrowing->book->title ?? $borrowing->book->name }}</dd>
+                        <dd class="text-sm text-gray-900">{{ $borrowing->stock->book->title ?? $borrowing->stock->book->name }}</dd>
                     </div>
                     <div class="grid grid-cols-2">
                         <dt class="text-sm font-medium text-gray-500">Yazar(lar):</dt>
                         <dd class="text-sm text-gray-900">
-                            @if(isset($borrowing->book->authors) && $borrowing->book->authors->count() > 0)
-                                {{ $borrowing->book->authors->pluck('name')->join(', ') }}
+                            @if(isset($borrowing->stock->book->authors) && $borrowing->stock->book->authors->count() > 0)
+                                {{ $borrowing->stock->book->authors->pluck('name')->join(', ') }}
                             @else
                                 Belirtilmemiş
                             @endif
@@ -148,24 +148,28 @@
                     <div class="grid grid-cols-2">
                         <dt class="text-sm font-medium text-gray-500">Yayınevi:</dt>
                         <dd class="text-sm text-gray-900">
-                            {{ $borrowing->book->publisher->name ?? 'Belirtilmemiş' }}
+                            {{ $borrowing->stock->book->publisher->name ?? 'Belirtilmemiş' }}
                         </dd>
                     </div>
                     <div class="grid grid-cols-2">
                         <dt class="text-sm font-medium text-gray-500">ISBN:</dt>
-                        <dd class="text-sm text-gray-900">{{ $borrowing->book->isbn ?? 'Belirtilmemiş' }}</dd>
+                        <dd class="text-sm text-gray-900">{{ $borrowing->stock->book->isbn ?? 'Belirtilmemiş' }}</dd>
                     </div>
                     <div class="grid grid-cols-2">
                         <dt class="text-sm font-medium text-gray-500">Kategori:</dt>
                         <dd class="text-sm text-gray-900">
-                            {{ $borrowing->book->category->name ?? 'Belirtilmemiş' }}
+                            {{ $borrowing->stock->book->category->name ?? 'Belirtilmemiş' }}
                         </dd>
                     </div>
                     <div class="grid grid-cols-2">
                         <dt class="text-sm font-medium text-gray-500">Tür:</dt>
                         <dd class="text-sm text-gray-900">
-                            {{ $borrowing->book->genre->name ?? 'Belirtilmemiş' }}
+                            {{ $borrowing->stock->book->genre->name ?? 'Belirtilmemiş' }}
                         </dd>
+                    </div>
+                    <div class="grid grid-cols-2">
+                        <dt class="text-sm font-medium text-gray-500">Barkod:</dt>
+                        <dd class="text-sm text-gray-900">{{ $borrowing->stock->barcode ?? 'Belirtilmemiş' }}</dd>
                     </div>
                 </dl>
             </div>

@@ -31,7 +31,7 @@
             <div>
                 <label for="user_id" class="block text-sm font-medium text-gray-700 mb-1">Kullanıcı <span class="text-red-500">*</span></label>
                 <div class="flex gap-2">
-                    <select name="user_id" id="user_id" required class="flex-1 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <select name="user_id" id="user_id" required class="select2-tailwind flex-1 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Kullanıcı Seçin</option>
                         @foreach($users as $user)
                             <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
@@ -63,7 +63,7 @@
                                 <i class="fas fa-search mr-2"></i> Ara
                             </button>
                         </div>
-                        <input type="hidden" name="book_ids[]" class="selected-book-id">
+                        <input type="hidden" name="stock_ids[]" class="selected-stock-id">
                     </div>
 
                     <!-- Ödünç Süreleri -->
@@ -128,6 +128,7 @@
     let bookTemplate = null;
     let bookCounter = 1;
     let selectedBooks = [null]; // İlk kitap için null değeri
+    let selectedStocks = [null]; // Seçilen stoklar için
 
     $(document).ready(function() {
         // Select2'yi başlat
@@ -239,6 +240,7 @@
             const index = $('.book-entry').index(bookEntry);
             
             selectedBooks.splice(index, 1);
+            selectedStocks.splice(index, 1);
             bookEntry.remove();
             
             // Kitap numaralarını güncelle
@@ -272,7 +274,7 @@
             newBook.find('.selectedBookInfo').addClass('hidden');
             newBook.find('.selectedBookDetails').empty();
             newBook.find('.bookSearch').val('');
-            newBook.find('.selected-book-id').val('');
+            newBook.find('.selected-stock-id').val('');
             
             // Kaldır butonunu etkinleştir ve tüm kaldır butonlarını görünür yap
             newBook.find('.remove-book').prop('disabled', false);
@@ -283,6 +285,7 @@
             
             // selectedBooks dizisini güncelle
             selectedBooks.push(null);
+            selectedStocks.push(null);
         });
 
         checkFormValidity();
@@ -300,43 +303,59 @@
         try {
             const response = await fetch(`/admin/books/borrowing-search?query=${encodeURIComponent(searchTerm)}`);
             const data = await response.json();
+            console.log('Search API response:', data); // Debug için API yanıtını konsola yazdır
 
             if (data.books && data.books.length > 0) {
                 let booksHtml = '<div class="space-y-2">';
                 
                 data.books.forEach(book => {
-                    // Kitabın ödünç verilip verilemeyeceğini kontrol et
-                    const isAvailable = !data.borrowedBookIds.includes(book.id);
+                    // Kitabın kullanılabilir stokları
+                    const availableStocks = book.stocks.filter(stock => stock.status === 'available');
                     
-                    // Zaten seçilen kitapları da kontrol et
-                    const isAlreadySelected = selectedBooks.some(selectedBook => selectedBook && selectedBook.id === book.id);
-                    
-                    const isSelectable = isAvailable && !isAlreadySelected;
-                    const bookClass = isSelectable ? 'border-green-200 hover:bg-green-50' : 'border-red-200 bg-red-50 cursor-not-allowed';
-                    const authorsList = book.authors.map(a => `${a.first_name} ${a.last_name}`).join(', ');
-                    
-                    let statusMessage = '';
-                    if (!isAvailable) {
-                        statusMessage = 'Bu kitap şu anda ödünç verilmiş';
-                    } else if (isAlreadySelected) {
-                        statusMessage = 'Bu kitap zaten seçilmiş';
-                    } else {
-                        statusMessage = 'Mevcut';
-                    }
-                    
-                    booksHtml += `
-                        <div class="border ${bookClass} rounded p-3 flex justify-between items-center">
-                            <div>
-                                <p class="font-medium">${book.name || book.title}</p>
-                                <p class="text-sm text-gray-600">Yazar: ${authorsList}</p>
-                                <p class="text-sm text-gray-600">ISBN: ${book.isbn || 'Belirtilmemiş'}</p>
-                                <p class="text-xs ${isSelectable ? 'text-green-600' : 'text-red-600'}">
-                                    ${statusMessage}
-                                </p>
+                    if (availableStocks.length === 0) {
+                        // Kitabın stoku yoksa ya da hepsi ödünç verilmiş
+                        booksHtml += `
+                            <div class="border border-red-200 bg-red-50 rounded p-3 flex justify-between items-center cursor-not-allowed">
+                                <div>
+                                    <p class="font-medium">${book.name || book.title}</p>
+                                    <p class="text-sm text-gray-600">Yazar: ${book.authors.map(a => `${a.first_name} ${a.last_name}`).join(', ')}</p>
+                                    <p class="text-sm text-gray-600">ISBN: ${book.isbn || 'Belirtilmemiş'}</p>
+                                    <p class="text-xs text-red-600">Bu kitabın kullanılabilir stoku bulunmamaktadır</p>
+                                </div>
                             </div>
-                            ${isSelectable ? `<button type="button" onclick='selectBook(${JSON.stringify(book).replace(/'/g, "\\'")}, ${$('.book-entry').index(bookEntry)})' class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">Seç</button>` : ''}
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        // Kitabın kullanılabilir stokları varsa her biri için bir satır göster
+                        availableStocks.forEach(stock => {
+                            // Bu stok ID'si zaten seçilmiş mi kontrol et
+                            const isAlreadySelected = selectedStocks.some(selectedStock => selectedStock && selectedStock.id === stock.id);
+                            
+                            const isSelectable = !isAlreadySelected;
+                            const stockClass = isSelectable ? 'border-green-200 hover:bg-green-50' : 'border-red-200 bg-red-50 cursor-not-allowed';
+                            
+                            let statusMessage = '';
+                            if (isAlreadySelected) {
+                                statusMessage = 'Bu kopya zaten seçilmiş';
+                            } else {
+                                statusMessage = 'Stokta mevcut';
+                            }
+                            
+                            booksHtml += `
+                                <div class="border ${stockClass} rounded p-3 flex justify-between items-center">
+                                    <div>
+                                        <p class="font-medium">${book.name || book.title}</p>
+                                        <p class="text-sm text-gray-600">Yazar: ${book.authors.map(a => `${a.first_name} ${a.last_name}`).join(', ')}</p>
+                                        <p class="text-sm text-gray-600">ISBN: ${book.isbn || 'Belirtilmemiş'}</p>
+                                        <p class="text-sm text-gray-600">Barkod: ${stock.barcode || 'Belirtilmemiş'}</p>
+                                        <p class="text-xs ${isSelectable ? 'text-green-600' : 'text-red-600'}">
+                                            ${statusMessage}
+                                        </p>
+                                    </div>
+                                    ${isSelectable ? `<button type="button" onclick='selectStock(${JSON.stringify(book).replace(/'/g, "\\'")}, ${JSON.stringify(stock).replace(/'/g, "\\'")}, ${$('.book-entry').index(bookEntry)})' class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">Seç</button>` : ''}
+                                </div>
+                            `;
+                        });
+                    }
                 });
                 
                 booksHtml += '</div>';
@@ -345,17 +364,19 @@
                 resultContent.html('<p class="text-red-500 text-center py-4">Kitap bulunamadı</p>');
             }
         } catch (error) {
+            console.error('Book search error:', error); // Hata durumunda konsola yazdır
             resultContent.html('<p class="text-red-500 text-center py-4">Arama sırasında bir hata oluştu</p>');
         }
     }
 
-    function selectBook(book, index) {
-        // selectedBooks dizisini güncelle
+    function selectStock(book, stock, index) {
+        // Seçilen kitap ve stok bilgilerini kaydet
         selectedBooks[index] = book;
+        selectedStocks[index] = stock;
         
         // DOM elementlerini güncelle
         const bookEntry = $('.book-entry').eq(index);
-        bookEntry.find('.selected-book-id').val(book.id);
+        bookEntry.find('.selected-stock-id').val(stock.id);
         bookEntry.find('.bookSearchResults').addClass('hidden');
         
         const selectedBookDetails = bookEntry.find('.selectedBookDetails');
@@ -364,6 +385,7 @@
             <p><strong>Kitap Adı:</strong> ${book.name || book.title}</p>
             <p><strong>ISBN:</strong> ${book.isbn || 'Belirtilmemiş'}</p>
             <p><strong>Yazar:</strong> ${authorsList}</p>
+            <p><strong>Barkod:</strong> ${stock.barcode || 'Belirtilmemiş'}</p>
         `);
         bookEntry.find('.selectedBookInfo').removeClass('hidden');
         
@@ -375,7 +397,7 @@
         const submitBtn = document.getElementById('submitButton');
         
         // En az bir kitap seçilmiş mi kontrol et
-        const hasSelectedBook = selectedBooks.some(book => book !== null);
+        const hasSelectedBook = selectedStocks.some(stock => stock !== null);
         
         if (user && hasSelectedBook) {
             submitBtn.disabled = false;
