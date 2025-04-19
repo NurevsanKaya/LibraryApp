@@ -386,8 +386,14 @@ class BorrowingController extends Controller
                     ->with('error', 'Bu kitabın süresi daha önce uzatılmış.');
         }
         
-        // Teslim tarihini 7 gün uzat
-        $extendedDate = Carbon::parse($borrowing->due_date)->addDays(7);
+        // Validasyon
+        $validated = $request->validate([
+            'extension_days' => 'required|integer|min:1|max:30',
+            'extended_date' => 'required|date|after:today',
+        ]);
+        
+        // Uzatılmış tarihi direkt olarak kullan
+        $extendedDate = Carbon::parse($request->extended_date);
         
         // Uzatılmış tarihi kaydet
         $borrowing->update([
@@ -395,6 +401,6 @@ class BorrowingController extends Controller
         ]);
         
         return redirect()->route('admin.borrowings.index')
-                ->with('success', 'Kitap teslim tarihi 7 gün uzatıldı.');
+                ->with('success', "Kitap teslim tarihi {$request->extension_days} gün uzatıldı. Yeni teslim tarihi: " . $extendedDate->format('d.m.Y'));
     }
 }

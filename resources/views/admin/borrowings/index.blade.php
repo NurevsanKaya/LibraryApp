@@ -146,7 +146,7 @@
                                     
                                     @if(!$borrowing->extended_return_date)<!--süre uzatılmamış-->
                                         <button type="button"
-                                                onclick="extendDueDate({{ $borrowing->id }})"
+                                                onclick="extendDueDate({{ $borrowing->id }}, '{{ $borrowing->due_date }}')"
                                                 class="text-green-500 hover:text-green-700">
                                             <i class="fas fa-calendar-plus mr-1"></i> Süreyi Uzat
                                         </button>
@@ -207,6 +207,46 @@
     </div>
 </div>
 
+<!-- Süre Uzatma Modal -->
+<div id="extendDueDateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center pb-3">
+            <h3 class="text-xl font-bold">Süre Uzatma</h3>
+            <button onclick="document.getElementById('extendDueDateModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-500">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="extendDueDateForm" method="POST" action="">
+            @csrf
+            <div class="mb-4">
+                <label for="extension_days" class="block text-sm font-medium text-gray-700 mb-1">Kaç gün uzatmak istiyorsunuz?</label>
+                <input type="number" name="extension_days" id="extension_days" value="7" min="1" max="30" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <p class="text-xs text-gray-500 mt-1">En fazla 30 gün uzatabilirsiniz.</p>
+            </div>
+            
+            <div class="mb-4">
+                <label for="extended_date" class="block text-sm font-medium text-gray-700 mb-1">Yeni Teslim Tarihi</label>
+                <input type="date" name="extended_date" id="extended_date" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <input type="hidden" id="original_due_date" name="original_due_date">
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('extendDueDateModal').classList.add('hidden')"
+                        class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
+                    İptal
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    Süreyi Uzat
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     function openReturnModal(borrowingId) {
         // Form action URL'sini ayarla
@@ -216,32 +256,58 @@
         document.getElementById('returnBookModal').classList.remove('hidden');
     }
 
-    function extendDueDate(borrowingId) {
-        // Kullanıcıya onay sor
-        if (confirm("Bu kitabın iade süresi 7 gün uzatılacak. Emin misiniz?")) {
-            // Form oluştur
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/admin/borrowings/${borrowingId}/extend`;
-            
-            // CSRF token ekle
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            form.appendChild(csrfToken);
-            
-            // Method ekle
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'POST';
-            form.appendChild(methodInput);
-            
-            // Formu sayfaya ekle ve gönder
-            document.body.appendChild(form);
-            form.submit();
+    function extendDueDate(borrowingId, dueDate) {
+        // Form action URL'sini ayarla
+        document.getElementById('extendDueDateForm').action = `/admin/borrowings/${borrowingId}/extend`;
+        
+        // Orijinal teslim tarihini kaydet
+        const originalDueDate = document.getElementById('original_due_date');
+        originalDueDate.value = dueDate;
+        
+        // Varsayılan uzatma süresi (7 gün)
+        const extensionDays = document.getElementById('extension_days');
+        extensionDays.value = 7;
+        
+        // Yeni tarihi hesapla (orijinal tarih + 7 gün)
+        const newDate = calculateNewDate(dueDate, 7);
+        document.getElementById('extended_date').value = newDate;
+        
+        // Minimum tarihi bugün olarak ayarla
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('extended_date').min = today;
+        
+        // Modal'ı göster
+        document.getElementById('extendDueDateModal').classList.remove('hidden');
+    }
+    
+    // Gün sayısı değiştiğinde yeni tarihi hesapla
+    document.getElementById('extension_days').addEventListener('change', function() {
+        const originalDueDate = document.getElementById('original_due_date').value;
+        const days = parseInt(this.value);
+        
+        if (days > 0 && days <= 30) {
+            const newDate = calculateNewDate(originalDueDate, days);
+            document.getElementById('extended_date').value = newDate;
         }
+    });
+    
+    // Tarih değiştiğinde gün farkını hesapla
+    document.getElementById('extended_date').addEventListener('change', function() {
+        const originalDueDate = new Date(document.getElementById('original_due_date').value);
+        const newDate = new Date(this.value);
+        
+        // İki tarih arasındaki farkı gün olarak hesapla
+        const diffTime = Math.abs(newDate - originalDueDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        document.getElementById('extension_days').value = diffDays;
+    });
+    
+    // Yeni tarihi hesaplama fonksiyonu
+    function calculateNewDate(baseDate, daysToAdd) {
+        const date = new Date(baseDate);
+        date.setDate(date.getDate() + parseInt(daysToAdd));
+        return date.toISOString().split('T')[0];
     }
 
     function filterBorrowings() {
