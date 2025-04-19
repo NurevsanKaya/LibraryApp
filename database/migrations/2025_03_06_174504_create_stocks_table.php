@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('barcode', 50)->unique();
             $table->foreignId('book_id')->constrained('books')->onDelete('cascade');
             $table->foreignId('shelf_id')->constrained('shelves')->onDelete('cascade');
-            $table->string('acquisition_source')->nullable();
+            $table->string('acquisition_source_id')->constrained('acquisition_source')->onDelete('cascade');
             $table->decimal('acquisition_price', 10, 2)->nullable();
             $table->date('acquisition_date')->nullable();
             $table->enum('status', ['available', 'borrowed'])->default('available');

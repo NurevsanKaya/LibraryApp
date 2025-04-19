@@ -9,7 +9,9 @@ class PenaltyPayment extends Model
 {
     use HasFactory;
     protected $table = 'penalty_payments';
-
+    protected $casts = [
+        'payment_date' => 'date',
+    ];
     protected $fillable = ['user_id', 'amount', 'payment_date', 'payment_method', 'status'];
 
     public function user()

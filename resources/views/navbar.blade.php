@@ -12,6 +12,7 @@
         </a>
 
         <nav id="navmenu" class="navmenu">
+
             <ul>
                 <li><a href="{{ url('/') }}" class="active">ANASAYFA</a></li>
                 <li class="dropdown"><a href="#{{ url('/about') }}"><span>HAKKIMIZDA</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
@@ -30,7 +31,18 @@
             <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
 
-        <a class="btn-getstarted" href="{{ route('login') }}">Giriş Yap</a>
+        @if(Auth::check())
+            <a href="{{ route('dashboard') }}"
+               class="inline-block px-5 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow hover:bg-indigo-700 transition duration-200">
+                👤 Hesabım
+            </a>
+        @else
+            <a href="{{ route('login') }}"
+               class="inline-block px-5 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow hover:bg-gray-700 transition duration-200">
+                🔐 Giriş Yap
+            </a>
+        @endif
+
 
     </div>
 
