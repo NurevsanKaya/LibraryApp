@@ -33,7 +33,8 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('admin.dashboard', absolute: false));
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Normal kullanıcılar anasayfaya
+        return redirect()->intended('/');
     }
 
     /**

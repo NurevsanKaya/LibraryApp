@@ -4,6 +4,10 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\UserborrowController;
+use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\UserPenaltyController;
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Controllers\PublisherController;
@@ -45,9 +49,10 @@ Route::get('/contact', function () {
 Route::get('/search', [BookController::class, 'search'])->name('search');
 
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [UserDashboardController::class, 'dashboard'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
 
 // Admin Rotaları
 Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(function () {
@@ -111,10 +116,18 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::get('/borrowings/{id}', [BorrowingController::class, 'show'])->name('admin.borrowings.show');
     Route::post('/borrowings/{id}/return', [BorrowingController::class, 'returnBook'])->name('admin.borrowings.return');
     Route::post('/borrowings/{id}/extend', [BorrowingController::class, 'extendDueDate'])->name('admin.borrowings.extend');
-    
+
 });
 
 Route::middleware('auth')->group(function () {
+
+    // Kullanıcı Kitap Ödünçleri (UserBorrowController)
+    Route::get('/my-borrowings', [UserBorrowController::class, 'index'])->name('user.borrowings');
+
+    // Kullanıcı Cezaları (UserPenaltyController)
+    Route::get('/my-penalties', [UserPenaltyController::class, 'index'])->name('user.penalties');
+    Route::post('/penalties/{id}/pay', [UserPenaltyController::class, 'pay'])->name('penalty.pay');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
