@@ -37,10 +37,16 @@
                 👤 Hesabım
             </a>
         @else
-            <a href="{{ route('login') }}"
-               class="inline-block px-5 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow hover:bg-gray-700 transition duration-200">
-                🔐 Giriş Yap
-            </a>
+            <div class="flex space-x-1">
+                <a href="{{ route('login') }}"
+                   class="inline-block px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow hover:bg-gray-700 transition duration-200">
+                    🔐 Giriş Yap
+                </a>
+                <a href="{{ route('register') }}"
+                   class="inline-block px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow hover:bg-green-700 transition duration-200">
+                    ✏️ Kayıt Ol
+                </a>
+            </div>
         @endif
 
 

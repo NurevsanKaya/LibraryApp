@@ -1,10 +1,5 @@
 <x-app-layout>
-    {{-- Header kısmı varsa burada kalabilir --}}
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
+    {{-- Header kısmını kaldırıyoruz --}}
 
     <div class="flex min-h-screen bg-gray-100 "> {{-- pt-8 ile her şeyi yukarı alıyoruz --}}
 
