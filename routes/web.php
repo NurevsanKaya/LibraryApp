@@ -107,6 +107,7 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
     Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
+    Route::get('/users/{id}', [UserController::class, 'show'])->name('admin.users.show');
 
     // Kitap Ödünç İşlemleri
     Route::get('/borrowings', [BorrowingController::class, 'index'])->name('admin.borrowings.index');
