@@ -84,4 +84,39 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')
             ->with('success', 'Kullanıcı başarıyla güncellendi.');
     }
+
+    public function show($id)
+    {
+        $user = User::findOrFail($id);
+        
+        // Aktif ödünç işlemleri (iade edilmemiş)
+        $activeBorrowings = $user->borrowings()
+            ->whereNull('return_date')
+            ->with(['stock.book.authors', 'stock.book.publisher'])
+            ->orderBy('due_date', 'asc')
+            ->get();
+        
+        // Geçmiş ödünç işlemleri (iade edilmiş)
+        $pastBorrowings = $user->borrowings()
+            ->whereNotNull('return_date')
+            ->with(['stock.book.authors', 'stock.book.publisher'])
+            ->orderBy('return_date', 'desc')
+            ->get();
+        
+        // Yaklaşan teslim tarihleri (bugünden itibaren 3 gün içinde)
+        $today = now();
+        $upcomingDueDates = $activeBorrowings->filter(function($borrowing) use ($today) {
+            $dueDate = $borrowing->extended_return_date ? \Carbon\Carbon::parse($borrowing->extended_return_date) : \Carbon\Carbon::parse($borrowing->due_date);
+            $daysDiff = $dueDate->diffInDays($today);
+            return $daysDiff <= 3 && $dueDate->greaterThanOrEqualTo($today);
+        });
+        
+        // Gecikmiş kitaplar
+        $overdueBorrowings = $activeBorrowings->filter(function($borrowing) use ($today) {
+            $dueDate = $borrowing->extended_return_date ? \Carbon\Carbon::parse($borrowing->extended_return_date) : \Carbon\Carbon::parse($borrowing->due_date);
+            return $dueDate->lessThan($today);
+        });
+        
+        return view('admin.users.show', compact('user', 'activeBorrowings', 'pastBorrowings', 'upcomingDueDates', 'overdueBorrowings'));
+    }
 } 

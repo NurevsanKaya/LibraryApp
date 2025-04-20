@@ -79,9 +79,12 @@
                             </span>
                         </td>
                         <td class="py-4 px-4 border-b border-gray-200">
-                            <button type="button" onclick="editUser({{ $user->id }})" class="text-blue-500 hover:text-blue-700">
+                            <button type="button" onclick="editUser('{{ $user->id }}')" class="text-blue-500 hover:text-blue-700 mr-2">
                                 <i class="fas fa-edit mr-1"></i> Düzenle
                             </button>
+                            <a href="{{ route('admin.users.show', $user->id) }}" class="text-indigo-500 hover:text-indigo-700">
+                                <i class="fas fa-eye mr-1"></i> Detaylar
+                            </a>
                         </td>
                     </tr>
                 @empty
@@ -109,7 +112,7 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        
+
         <form id="addUserForm" method="POST" action="{{ route('admin.users.store') }}">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -118,22 +121,22 @@
                     <input type="text" name="name" id="name" required
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                
+
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
                     <input type="email" name="email" id="email" required
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                
+
                 <div>
                     <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
                     <input type="text" name="phone" id="phone"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                
+
                 <div>
                     <label for="is_active" class="block text-sm font-medium text-gray-700 mb-1">Durum</label>
-                    <select name="is_active" id="is_active" 
+                    <select name="is_active" id="is_active"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         <option value="1">Aktif</option>
                         <option value="0">Pasif</option>
@@ -145,20 +148,20 @@
                     <input type="password" name="password" id="password" required
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                
+
                 <div>
                     <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Şifre Tekrar</label>
                     <input type="password" name="password_confirmation" id="password_confirmation" required
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
-            
+
             <div class="flex justify-end space-x-3">
-                <button type="button" onclick="document.getElementById('addUserModal').classList.add('hidden')" 
+                <button type="button" onclick="document.getElementById('addUserModal').classList.add('hidden')"
                         class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
                     İptal
                 </button>
-                <button type="submit" 
+                <button type="submit"
                         class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                     Kullanıcı Ekle
                 </button>
@@ -176,7 +179,7 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        
+
         <form id="editUserForm" method="POST" action="">
             @csrf
             @method('PUT')
@@ -186,22 +189,22 @@
                     <input type="text" name="name" id="edit_name" required
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                
+
                 <div>
                     <label for="edit_email" class="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
                     <input type="email" name="email" id="edit_email" required
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                
+
                 <div>
                     <label for="edit_phone" class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
                     <input type="text" name="phone" id="edit_phone"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                
+
                 <div>
                     <label for="edit_is_active" class="block text-sm font-medium text-gray-700 mb-1">Durum</label>
-                    <select name="is_active" id="edit_is_active" 
+                    <select name="is_active" id="edit_is_active"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         <option value="1">Aktif</option>
                         <option value="0">Pasif</option>
@@ -214,20 +217,20 @@
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                            placeholder="Değiştirmek istemiyorsanız boş bırakın">
                 </div>
-                
+
                 <div>
                     <label for="edit_password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Yeni Şifre Tekrar</label>
                     <input type="password" name="password_confirmation" id="edit_password_confirmation"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
-            
+
             <div class="flex justify-end space-x-3">
-                <button type="button" onclick="document.getElementById('editUserModal').classList.add('hidden')" 
+                <button type="button" onclick="document.getElementById('editUserModal').classList.add('hidden')"
                         class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
                     İptal
                 </button>
-                <button type="submit" 
+                <button type="submit"
                         class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                     Kaydet
                 </button>
@@ -247,10 +250,10 @@
                 document.getElementById('edit_email').value = user.email;
                 document.getElementById('edit_phone').value = user.phone || '';
                 document.getElementById('edit_is_active').value = user.is_active ? '1' : '0';
-                
+
                 // Form action URL'sini ayarla
                 document.getElementById('editUserForm').action = `/admin/users/${userId}`;
-                
+
                 // Modal'ı göster
                 document.getElementById('editUserModal').classList.remove('hidden');
             })
@@ -260,4 +263,4 @@
             });
     }
 </script>
-@endsection 
+@endsection
