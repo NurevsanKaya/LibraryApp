@@ -15,23 +15,33 @@ class UserPenaltyController extends Controller
 
         return view('user.penalties', compact('penalties'));
     }
-    public function pay(Request $request, $id)
+
+    public function uploadReceipt(Request $request, $id): \Illuminate\Http\RedirectResponse
     {
-        // Kullanıcının gerçekten ödeme yöntemi seçtiğinden emin olalım
+
+
         $request->validate([
-            'payment_method' => 'required|in:nakit,online',
+            'payment_method' => 'required|in:nakit,havale',
+            'receipt' => 'required_if:payment_method,havale|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        $penalty = PenaltyPayment::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
+        $penalty = PenaltyPayment::where('user_id', auth()->id())->findOrFail($id);
 
-        $penalty->update([
-            'status' => 'ödendi',
+        $data = [
+            'payment_method' => $request->payment_method,
             'payment_date' => now(),
-            'payment_method' => $request->payment_method, // 💥 burası eklendi!
-        ]);
+        ];
 
-        return redirect()->back()->with('success', 'Ödeme başarıyla gerçekleştirildi!');
+        if ($request->payment_method === 'havale') {
+            $data['receipt_path'] = $request->file('receipt')->store('receipts', 'public');
+            $data['status'] = 'bekliyor'; // dekont yüklendi
+        } else {
+            $data['status'] = 'bekliyor'; // nakit olarak memura iletildi
+        }
+
+        $penalty->update($data);
+
+        return redirect()->back()->with('success', 'Ödeme işlemi kaydedildi. Onay bekleniyor.');
     }
+
 }

@@ -17,7 +17,13 @@
                    class="flex items-center gap-3 px-4 py-2 rounded-lg transition-all
                   {{ request()->routeIs('user.borrowings') ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700' }}">
                     <i class="fas fa-book-reader"></i>
-                    <span>Ödünç İşlemleri</span>
+                    <span>Aktif Ödünç İşlemleri</span>
+                </a>
+                <a href="{{ route('user.oldborrowings') }}"
+                   class="flex items-center gap-3 px-4 py-2 rounded-lg transition-all
+                  {{ request()->routeIs('user.oldborrowings') ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700' }}">
+                    <i class="fas fa-book-reader"></i>
+                    <span>Geçmiş Ödünç İşlemleri</span>
                 </a>
 
                 <a href="{{ route('user.penalties') }}"
@@ -26,6 +32,7 @@
                     <i class="fas fa-money-check-alt"></i>
                     <span>Ceza / Borç Bilgisi</span>
                 </a>
+
             </nav>
         </aside>
 
