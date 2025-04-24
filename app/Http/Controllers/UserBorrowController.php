@@ -14,7 +14,7 @@ class UserBorrowController extends Controller
 
         $borrowings = Borrowing::with('stock.book')
             ->where('user_id', $userId)
-
+            ->whereNull('return_date') // sadece iade edilmemişleri getir
             ->get();
 
         return view('user.borrowings', compact('borrowings'));
