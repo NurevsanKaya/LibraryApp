@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->decimal('amount', 10, 2);
             $table->date('payment_date');
-            $table->enum('payment_method', ['nakit', 'online']);
+            $table->enum('payment_method', ['nakit', 'havale']);
             $table->enum('status', ['ödendi', 'ödeme bekleniyor'])->default('ödeme bekleniyor');
 
             $table->timestamps();

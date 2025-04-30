@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\UserborrowController;
 use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\UserOldBorrowController;
 use App\Http\Controllers\UserPenaltyController;
 
 use Illuminate\Support\Facades\Route;
@@ -117,7 +118,11 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::get('/borrowings/{id}', [BorrowingController::class, 'show'])->name('admin.borrowings.show');
     Route::post('/borrowings/{id}/return', [BorrowingController::class, 'returnBook'])->name('admin.borrowings.return');
     Route::post('/borrowings/{id}/extend', [BorrowingController::class, 'extendDueDate'])->name('admin.borrowings.extend');
+//ceza işlemleri
 
+    Route::get('/payments', [\App\Http\Controllers\PenaltyPaymentController::class, 'index'])->name('admin.payments.index');
+    Route::post('/penalties/{id}/approve', [\App\Http\Controllers\PenaltyPaymentController::class, 'approve'])->name('admin.penalty.approve');
+    Route::post('/penalties/{id}/reject', [\App\Http\Controllers\PenaltyPaymentController::class, 'reject'])->name('admin.penalty.reject');
 });
 
 Route::middleware('auth')->group(function () {
@@ -127,11 +132,16 @@ Route::middleware('auth')->group(function () {
 
     // Kullanıcı Cezaları (UserPenaltyController)
     Route::get('/my-penalties', [UserPenaltyController::class, 'index'])->name('user.penalties');
-    Route::post('/penalties/{id}/pay', [UserPenaltyController::class, 'pay'])->name('penalty.pay');
+
+
+    Route::post('/penalties/{id}/upload', [UserPenaltyController::class, 'uploadReceipt'])->name('penalty.pay');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    //geçmiş ödünçler
+    Route::get('/my-borrowings-old', [UserOldBorrowController::class, 'index'])->name('user.oldborrowings');
+
 });
 
 require __DIR__.'/auth.php';

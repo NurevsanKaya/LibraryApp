@@ -12,23 +12,22 @@ class PenaltyPaymentController extends Controller
      */
     public function index()
     {
-        //
+        $penalties = PenaltyPayment::with('user')->latest()->get();
+        return view('admin.payments.index', compact('penalties'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function approve($id)
     {
-        //
+        $penalty = PenaltyPayment::findOrFail($id);
+        $penalty->update(['status' => 'onaylandı']);
+        return back()->with('success', 'Ceza ödemesi onaylandı.');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function reject($id)
     {
-        //
+        $penalty = PenaltyPayment::findOrFail($id);
+        $penalty->update(['status' => 'reddedildi']);
+        return back()->with('success', 'Ceza ödemesi reddedildi.');
     }
 
     /**
