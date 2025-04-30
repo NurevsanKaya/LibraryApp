@@ -181,8 +181,8 @@
                    
                     <!-- Edinme Kaynağı -->
                     <div>
-                    <label for="acquisition_source" class="block text-sm font-medium text-gray-700 mb-1">Edinme Kaynağı</label>
-                        <select name="acquisition_source" id="acquisition_source"
+                    <label for="acquisition_source_id" class="block text-sm font-medium text-gray-700 mb-1">Edinme Kaynağı</label>
+                        <select name="acquisition_source_id" id="acquisition_source_id"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 select2-tailwind"
                             required>
                             <option value="">Elde Edinme Kaynağı Seçin</option>
@@ -206,6 +206,16 @@
                         <label for="acquisition_date" class="block text-sm font-medium text-gray-700 mb-1">Edinme Tarihi</label>
                         <input type="date" name="acquisition_date" id="acquisition_date"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <!-- Durum -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Durum</label>
+                        <select name="status" id="status" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="active">Mevcut</option>
+                            <option value="borrowed">Ödünç Verilmiş</option>
+                        </select>
                     </div>
 
                 
@@ -400,10 +410,11 @@
                     
                     // Form alanlarını doldur
                     document.getElementById('barcode').value = stock.barcode;
-                    document.getElementById('acquisition_source').value = stock.acquisition_source;
+                    document.getElementById('acquisition_source_id').value = stock.acquisition_source;
                     document.getElementById('acquisition_price').value = stock.acquisition_price;
                     document.getElementById('acquisition_date').value = stock.acquisition_date;
                     document.getElementById('selected_book_id').value = stock.book_id;
+                    document.getElementById('status').value = stock.status;
 
                     // Raf seçimini güncelle
                     const shelfSelect = document.getElementById('shelf_id');
