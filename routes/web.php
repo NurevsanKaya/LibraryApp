@@ -8,6 +8,7 @@ use App\Http\Controllers\UserborrowController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\UserOldBorrowController;
 use App\Http\Controllers\UserPenaltyController;
+use App\Http\Controllers\Admin\BookReportController;
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminMiddleware;
@@ -63,6 +64,10 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
 
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
+    // Kitap Raporlama
+    Route::get('/book-reports', [BookReportController::class, 'index'])->name('admin.book-reports.index');
+    Route::get('/book-reports/results', [BookReportController::class, 'getResults'])->name('admin.book-reports.results');
 
     // Kitap
     Route::get('/books', [AdminController::class, 'books'])->name('admin.books.index');
