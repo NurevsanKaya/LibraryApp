@@ -145,6 +145,12 @@
                               Ceza İşlemleri
                             </a>
                         </li>
+                        <li class="mb-3">
+                            <a href="{{ route('admin.book-reports.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-md {{ request()->routeIs('admin.book-reports.*') ? 'bg-gray-200' : '' }}">
+                                <i class="fas fa-chart-bar mr-3"></i>
+                                Kitap Raporları
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
