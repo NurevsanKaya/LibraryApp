@@ -49,7 +49,7 @@ class StockController extends Controller
             'barcode' => 'required|string|max:50|unique:stocks',
             'book_id' => 'required|exists:books,id',
             'shelf_id' => 'required|exists:shelves,id',
-            'acquisition_source_id' => 'nullable|exists:acquisition_sources,id',
+            'acquisition_source_id' => 'nullable|exists:acquisition_source,id',
             'acquisition_price' => 'nullable|numeric|min:0',
             'acquisition_date' => 'nullable|date',
             'status' => 'required|in:active,borrowed',
