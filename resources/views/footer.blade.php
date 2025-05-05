@@ -8,7 +8,7 @@
                 <a href="index.html" class="logo d-flex align-items-center">
                     <span class="sitename">KÜTÜPHANE</span>
                 </a>
-                <p>Cras fermentum odio eu feugiat lide par naso tierra. Justo eget nada terra videa magna derita valies darta donna mare fermentum iaculis eu non diam phasellus.</p>
+
                 <div class="social-links d-flex mt-4">
                     <a href=""><i class="bi bi-twitter-x"></i></a>
                     <a href=""><i class="bi bi-facebook"></i></a>
@@ -18,7 +18,7 @@
             </div>
 
             <div class="col-lg-2 col-6 footer-links">
-                <h4>Useful Links</h4>
+                <h4></h4>
                 <ul>
                     <li><a href="#">Anasayfa</a></li>
                     <li><a href="#">Hakkımızda</a></li>
@@ -28,24 +28,14 @@
                 </ul>
             </div>
 
-            <div class="col-lg-2 col-6 footer-links">
-                <h4>Our Services</h4>
-                <ul>
-                    <li><a href="#">Web Design</a></li>
-                    <li><a href="#">Web Development</a></li>
-                    <li><a href="#">Product Management</a></li>
-                    <li><a href="#">Marketing</a></li>
-                    <li><a href="#">Graphic Design</a></li>
-                </ul>
-            </div>
 
             <div class="col-lg-3 col-md-12 footer-contact text-center text-md-start">
                 <h4>İletişim</h4>
-                <p>A108 Adam Street</p>
-                <p>New York, NY 535022</p>
-                <p>United States</p>
-                <p class="mt-4"><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
-                <p><strong>Email:</strong> <span>info@example.com</span></p>
+                <p>KÜTÜPHANE</p>
+                <p>ÇANAKKALE</p>
+                <p>TÜRKİYE</p>
+                <p class="mt-4"><strong>Telefon:</strong> <span>0589 5548 55</span></p>
+                <p><strong>Mail:</strong> <span>info@example.com</span></p>
             </div>
 
         </div>

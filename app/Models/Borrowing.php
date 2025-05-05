@@ -37,5 +37,5 @@ class Borrowing extends Model
         return $this->belongsTo(Stock::class);
     }
 
-    
+
 }
