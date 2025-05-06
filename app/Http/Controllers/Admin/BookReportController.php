@@ -45,7 +45,15 @@ class BookReportController extends Controller
 
     public function getResults(Request $request)
     {
-        $query = Book::with(['category', 'publisher', 'authors', 'stocks.borrowings.user']);
+        $query = Book::query()
+            ->select([
+                'books.*',
+                'stocks.id as stock_id',
+                'stocks.barcode',
+                'stocks.status'
+            ])
+            ->leftJoin('stocks', 'books.id', '=', 'stocks.book_id')
+            ->with(['category', 'publisher', 'authors', 'stocks.borrowings.user']);
 
         // Temel filtreler
         if ($request->filled('name')) {
@@ -74,7 +82,7 @@ class BookReportController extends Controller
             switch ($request->status) {
                 case 'available':
                     $query->whereHas('stocks', function ($q) {
-                        $q->where('status', 'active');
+                        $q->where('status', 'available');
                     });
                     break;
                 case 'borrowed':
@@ -159,28 +167,31 @@ class BookReportController extends Controller
             });
         }
 
-        $books = $query->paginate(10);
+        $books = $query->paginate(5);
+        
+        // Sorgu tipini belirle
+        $queryType = 'search'; // Normal arama için 'search' olarak ayarla
 
-        return view('admin.book-reports.partials._results', compact('books'));
+        return view('admin.book-reports.partials._results', compact('books', 'queryType'));
     }
 
     // Hızlı filtre butonları için ana metot
     public function getQuickFilterResults(Request $request, string $filterType)
     {
         switch ($filterType) {
-            case 'overdue':
+                case 'overdue':
                 return $this->getOverdueBooks($request);
-            case 'due_today':
+                case 'due_today':
                 return $this->getDueTodayBooks($request);
-            case 'most_borrowed':
+                case 'most_borrowed':
                 return $this->getMostBorrowedBooks($request);
-            case 'added_last_month':
+                case 'added_last_month':
                 return $this->getLastMonthBooks($request);
-            case 'never_borrowed':
+                case 'never_borrowed':
                 return $this->getNeverBorrowedBooks($request);
-            case 'available':
+                case 'available':
                 return $this->getAvailableBooks($request);
-            case 'active_borrowings':
+                case 'active_borrowings':
                 return $this->getActiveBorrowings($request);
             default:
                 return response()->json(['error' => 'Geçersiz filtre tipi'], 400);
@@ -208,50 +219,189 @@ class BookReportController extends Controller
             ->orderBy('books.name')  // Önce kitap adına göre sırala
             ->orderBy('borrowings.due_date');  // Sonra teslim tarihine göre sırala
 
-        
         // Sonuçları sayfalayarak getir
-        $books = $overdueBooks->paginate(10);
+        $books = $overdueBooks->paginate(5);
 
-        foreach($books as $book) {
-            \Illuminate\Support\Facades\Log::info("Kitap: {$book->id} - {$book->name} - Barkod: {$book->barcode} - Teslim Tarihi: {$book->due_date}");
-        }
+        // Sorgu tipini belirle
+        $queryType = 'overdue';
 
-        return view('admin.book-reports.partials._results', compact('books'));
+        return view('admin.book-reports.partials._results', compact('books', 'queryType'));
     }
 
     // Bugün iade edilecek kitaplar için metot
     protected function getDueTodayBooks(Request $request)
     {
-        return response()->json(['error' => 'Bu filtre şu anda aktif değil'], 400);
+        // Bugün iade edilecek kitapları bulalım
+        $dueTodayBooks = Book::query()
+            ->select([
+                'books.*',
+                'stocks.id as stock_id',
+                'stocks.barcode',
+                'borrowings.due_date',
+                'borrowings.id as borrowing_id'
+            ])
+            ->join('stocks', 'books.id', '=', 'stocks.book_id')
+            ->join('borrowings', 'stocks.id', '=', 'borrowings.stock_id')
+            ->with(['category', 'publisher', 'authors'])
+            ->where('borrowings.return_date', null)  // İade edilmemiş olanlar
+            ->whereDate('borrowings.due_date', Carbon::today())  // Bugün iade edilecekler
+            ->where('borrowings.status', 'active')  // Aktif ödünç işlemleri
+            ->orderBy('books.name')
+            ->orderBy('borrowings.due_date');
+
+        // Sonuçları sayfalayarak getir
+        $books = $dueTodayBooks->paginate(5);
+
+        // Sorgu tipini belirle
+        $queryType = 'due_today';
+
+        return view('admin.book-reports.partials._results', compact('books', 'queryType'));
     }
 
     // En çok ödünç alınan kitaplar için metot
     protected function getMostBorrowedBooks(Request $request)
     {
-        return response()->json(['error' => 'Bu filtre şu anda aktif değil'], 400);
+        // En çok ödünç alınan kitapları bulalım
+        $mostBorrowedBooks = Book::query()
+            ->select([
+                'books.*',
+                'stocks.id as stock_id',
+                'stocks.barcode',
+                DB::raw('COUNT(DISTINCT borrowings.id) as borrow_count'), // Toplam ödünç alma sayısı
+                DB::raw('MAX(borrowings.borrow_date) as last_borrowed_date') // Son ödünç alma tarihi
+            ])
+            ->join('stocks', 'books.id', '=', 'stocks.book_id')
+            ->join('borrowings', 'stocks.id', '=', 'borrowings.stock_id')
+            ->with(['category', 'publisher', 'authors'])
+            ->groupBy([
+                'books.id',
+                'books.name',
+                'books.isbn',
+                'books.publication_year',
+                'books.category_id',
+                'books.publisher_id',
+                'books.created_at',
+                'books.updated_at',
+                'stocks.id',
+                'stocks.barcode'
+            ])
+            ->orderByDesc('borrow_count')
+            ->orderBy('books.name');
+
+        // Sonuçları sayfalayarak getir
+        $books = $mostBorrowedBooks->paginate(5);
+        
+        // Sorgu tipini view'e gönder
+        $queryType = 'most_borrowed';
+
+        return view('admin.book-reports.partials._results', compact('books', 'queryType'));
     }
 
     // Son 1 ayda eklenen kitaplar için metot
     protected function getLastMonthBooks(Request $request)
     {
-        return response()->json(['error' => 'Bu filtre şu anda aktif değil'], 400);
-    }
+        // Son 1 ayda eklenen kitapları bulalım
+        $lastMonthBooks = Book::query()
+            ->select([
+                'books.*',
+                'stocks.id as stock_id',
+                'stocks.barcode',
+                'stocks.created_at as stock_created_at',
+                'stocks.acquisition_price'
+            ])
+            ->join('stocks', 'books.id', '=', 'stocks.book_id')
+            ->with(['category', 'publisher', 'authors'])
+            ->where('stocks.created_at', '>=', Carbon::now()->subMonth())
+            ->orderByDesc('stocks.created_at')
+            ->orderBy('books.name');
+
+        // Sonuçları sayfalayarak getir
+        $books = $lastMonthBooks->paginate(5);
+
+        // Sorgu tipini belirle
+        $queryType = 'last_month';
+
+        return view('admin.book-reports.partials._results', compact('books', 'queryType'));
+            }
 
     // Hiç ödünç alınmayan kitaplar için metot
     protected function getNeverBorrowedBooks(Request $request)
     {
-        return response()->json(['error' => 'Bu filtre şu anda aktif değil'], 400);
+        // Hiç ödünç alınmamış kitapları bulalım
+        $neverBorrowedBooks = Book::query()
+            ->select([
+                'books.*',
+                'stocks.id as stock_id',
+                'stocks.barcode',
+                'stocks.created_at as stock_created_at'
+            ])
+            ->join('stocks', 'books.id', '=', 'stocks.book_id')
+            ->leftJoin('borrowings', 'stocks.id', '=', 'borrowings.stock_id')
+            ->with(['category', 'publisher', 'authors'])
+            ->whereNull('borrowings.id')
+            ->orderBy('books.name');
+
+        // Sonuçları sayfalayarak getir
+        $books = $neverBorrowedBooks->paginate(5);
+
+        // Sorgu tipini belirle
+        $queryType = 'never_borrowed';
+
+        return view('admin.book-reports.partials._results', compact('books', 'queryType'));
     }
 
     // Rafta mevcut olan kitaplar için metot
     protected function getAvailableBooks(Request $request)
     {
-        return response()->json(['error' => 'Bu filtre şu anda aktif değil'], 400);
+        // Rafta mevcut olan kitapları bulalım
+        $availableBooks = Book::query()
+            ->select([
+                'books.*',
+                'stocks.id as stock_id',
+                'stocks.barcode',
+                'stocks.status'
+            ])
+            ->join('stocks', 'books.id', '=', 'stocks.book_id')
+            ->with(['category', 'publisher', 'authors'])
+            ->where('stocks.status', 'available')
+            ->orderBy('books.name');
+
+        // Sonuçları sayfalayarak getir
+        $books = $availableBooks->paginate(5);
+
+        // Sorgu tipini belirle
+        $queryType = 'available';
+
+        return view('admin.book-reports.partials._results', compact('books', 'queryType'));
     }
 
     // Aktif ödünç işlemleri için metot
     protected function getActiveBorrowings(Request $request)
     {
-        return response()->json(['error' => 'Bu filtre şu anda aktif değil'], 400);
+        // Aktif ödünç işlemlerini bulalım
+        $activeBorrowings = Book::query()
+            ->select([
+                'books.*',
+                'stocks.id as stock_id',
+                'stocks.barcode',
+                'borrowings.borrow_date',
+                'borrowings.due_date',
+                'borrowings.id as borrowing_id'
+            ])
+            ->join('stocks', 'books.id', '=', 'stocks.book_id')
+            ->join('borrowings', 'stocks.id', '=', 'borrowings.stock_id')
+            ->with(['category', 'publisher', 'authors'])
+            ->where('borrowings.return_date', null)
+            ->where('borrowings.status', 'active')
+            ->orderBy('borrowings.due_date')
+            ->orderBy('books.name');
+
+        // Sonuçları sayfalayarak getir
+        $books = $activeBorrowings->paginate(5);
+
+        // Sorgu tipini belirle
+        $queryType = 'active_borrowings';
+
+        return view('admin.book-reports.partials._results', compact('books', 'queryType'));
     }
 } 

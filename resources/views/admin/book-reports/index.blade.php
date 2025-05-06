@@ -97,7 +97,7 @@
                 <select name="author_id" class="w-full rounded-md border-gray-300">
                     <option value="">Seçiniz</option>
                     @foreach($authors as $author)
-                        <option value="{{ $author->id }}">{{ $author->name }} {{ $author->surname }}</option>
+                        <option value="{{ $author->id }}">{{ $author->first_name }} {{ $author->last_name }}</option>
                     @endforeach
                 </select>
             </div>
