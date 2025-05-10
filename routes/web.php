@@ -129,6 +129,10 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::get('/payments', [\App\Http\Controllers\PenaltyPaymentController::class, 'index'])->name('admin.payments.index');
     Route::post('/penalties/{id}/approve', [\App\Http\Controllers\PenaltyPaymentController::class, 'approve'])->name('admin.penalty.approve');
     Route::post('/penalties/{id}/reject', [\App\Http\Controllers\PenaltyPaymentController::class, 'reject'])->name('admin.penalty.reject');
+    
+    // Ceza Ayarları
+    Route::get('/penalty-settings', [\App\Http\Controllers\PenaltySettingController::class, 'index'])->name('admin.penalty.settings');
+    Route::post('/penalty-settings', [\App\Http\Controllers\PenaltySettingController::class, 'update'])->name('admin.penalty.settings.update');
 });
 
 Route::middleware('auth')->group(function () {
