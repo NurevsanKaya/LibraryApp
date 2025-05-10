@@ -372,7 +372,7 @@ class BookSeeder extends Seeder
                     $book->authors()->attach($author->id);
                 }
             }
-
+            
             $this->command->info('30 kitap başarıyla eklendi.');
         });
     }

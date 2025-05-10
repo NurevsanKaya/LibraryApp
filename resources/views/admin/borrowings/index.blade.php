@@ -98,9 +98,15 @@
             <tbody>
                 @forelse($borrowings as $borrowing)
                     <tr>
-                        <td class="py-4 px-4 border-b border-gray-200">{{ $borrowing->stock->book->name }}</td>
                         <td class="py-4 px-4 border-b border-gray-200">
-                            @if($borrowing->stock->shelf)
+                            @if($borrowing->stock && $borrowing->stock->book)
+                                {{ $borrowing->stock->book->name }}
+                            @else
+                                Silinmiş Kitap
+                            @endif
+                        </td>
+                        <td class="py-4 px-4 border-b border-gray-200">
+                            @if($borrowing->stock && $borrowing->stock->shelf)
                                 {{ $borrowing->stock->shelf->shelf_number ?? '-' }}
                             @else
                                 -

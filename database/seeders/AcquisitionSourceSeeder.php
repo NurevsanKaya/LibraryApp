@@ -28,3 +28,4 @@ class AcquisitionSourceSeeder extends Seeder
         $this->command->info('5 edinme kaynağı başarıyla eklendi.');
     }
 }
+ 
