@@ -49,6 +49,7 @@ Route::get('/contact', function () {
     return view('contact');
 });
 Route::get('/search', [BookController::class, 'search'])->name('search');
+Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
 
 
 Route::get('/dashboard', [UserDashboardController::class, 'dashboard'])
