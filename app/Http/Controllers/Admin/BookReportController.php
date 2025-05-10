@@ -167,7 +167,7 @@ class BookReportController extends Controller
             });
         }
 
-        $books = $query->paginate(5);
+        $books = $query->get();
         
         // Sorgu tipini belirle
         $queryType = 'search'; // Normal arama için 'search' olarak ayarla
@@ -219,8 +219,8 @@ class BookReportController extends Controller
             ->orderBy('books.name')  // Önce kitap adına göre sırala
             ->orderBy('borrowings.due_date');  // Sonra teslim tarihine göre sırala
 
-        // Sonuçları sayfalayarak getir
-        $books = $overdueBooks->paginate(5);
+        // Sonuçları getir
+        $books = $overdueBooks->get();
 
         // Sorgu tipini belirle
         $queryType = 'overdue';
@@ -249,8 +249,8 @@ class BookReportController extends Controller
             ->orderBy('books.name')
             ->orderBy('borrowings.due_date');
 
-        // Sonuçları sayfalayarak getir
-        $books = $dueTodayBooks->paginate(5);
+        // Sonuçları getir
+        $books = $dueTodayBooks->get();
 
         // Sorgu tipini belirle
         $queryType = 'due_today';
@@ -288,8 +288,8 @@ class BookReportController extends Controller
             ->orderByDesc('borrow_count')
             ->orderBy('books.name');
 
-        // Sonuçları sayfalayarak getir
-        $books = $mostBorrowedBooks->paginate(5);
+        // Sonuçları getir
+        $books = $mostBorrowedBooks->get();
         
         // Sorgu tipini view'e gönder
         $queryType = 'most_borrowed';
@@ -315,14 +315,14 @@ class BookReportController extends Controller
             ->orderByDesc('stocks.created_at')
             ->orderBy('books.name');
 
-        // Sonuçları sayfalayarak getir
-        $books = $lastMonthBooks->paginate(5);
+        // Sonuçları getir
+        $books = $lastMonthBooks->get();
 
         // Sorgu tipini belirle
         $queryType = 'last_month';
 
         return view('admin.book-reports.partials._results', compact('books', 'queryType'));
-            }
+    }
 
     // Hiç ödünç alınmayan kitaplar için metot
     protected function getNeverBorrowedBooks(Request $request)
@@ -341,8 +341,8 @@ class BookReportController extends Controller
             ->whereNull('borrowings.id')
             ->orderBy('books.name');
 
-        // Sonuçları sayfalayarak getir
-        $books = $neverBorrowedBooks->paginate(5);
+        // Sonuçları getir
+        $books = $neverBorrowedBooks->get();
 
         // Sorgu tipini belirle
         $queryType = 'never_borrowed';
@@ -366,8 +366,8 @@ class BookReportController extends Controller
             ->where('stocks.status', 'available')
             ->orderBy('books.name');
 
-        // Sonuçları sayfalayarak getir
-        $books = $availableBooks->paginate(5);
+        // Sonuçları getir
+        $books = $availableBooks->get();
 
         // Sorgu tipini belirle
         $queryType = 'available';
@@ -396,8 +396,8 @@ class BookReportController extends Controller
             ->orderBy('borrowings.due_date')
             ->orderBy('books.name');
 
-        // Sonuçları sayfalayarak getir
-        $books = $activeBorrowings->paginate(5);
+        // Sonuçları getir
+        $books = $activeBorrowings->get();
 
         // Sorgu tipini belirle
         $queryType = 'active_borrowings';
