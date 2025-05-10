@@ -12,10 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('penalty_payments', function (Blueprint $table) {
-            $table->string('receipt_path')->nullable();
-            $table->enum('status', ['ödeme bekleniyor', 'bekliyor', 'onaylandı', 'reddedildi'])
-                ->default('ödeme bekleniyor')
-                ->change();
+            $table->foreignId('borrowing_id')->nullable()->constrained('borrowings')->onDelete('set null');
         });
     }
 
@@ -25,7 +22,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('penalty_payments', function (Blueprint $table) {
-            //
+            $table->dropForeign(['borrowing_id']);
+            $table->dropColumn('borrowing_id');
         });
     }
-};
+}; 

@@ -37,5 +37,8 @@ class Borrowing extends Model
         return $this->belongsTo(Stock::class);
     }
 
-    
+    public function penaltyPayment()
+    {
+        return $this->hasOne(PenaltyPayment::class);
+    }
 }
