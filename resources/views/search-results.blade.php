@@ -17,8 +17,8 @@
     </div>
 
     <!-- Arama Sonuçları -->
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold mb-4">
+    <div class="mb-8 bg-white rounded-lg shadow">
+        <h2 class="text-2xl font-bold mb-4 pt-4 pl-4">
             "{{ $query }}" için arama sonuçları
         </h2>
 
