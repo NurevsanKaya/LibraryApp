@@ -60,8 +60,8 @@
                             <td class="py-3 px-4 border-b border-gray-200">{{ $stock->barcode }}</td>
                             <td class="py-3 px-4 border-b border-gray-200">{{ $stock->book->name }}</td>
                             <td class="py-3 px-4 border-b border-gray-200">{{ $stock->shelf->shelf_number }}</td>
-                            <td class="py-3 px-4 border-b border-gray-200">{{ $stock->acquisition_source }}</td>
-                            <td class="py-3 px-4 border-b border-gray-200">{{ $stock->acquisition_date }}</td>
+                            <td class="py-3 px-4 border-b border-gray-200">{{ $stock->acquisitionSource->name }}</td>
+                            <td class="py-3 px-4 border-b border-gray-200">{{ \Carbon\Carbon::parse($stock->acquisition_date)->format('d.m.Y') }}</td>
                             <td class="py-3 px-4 border-b border-gray-200">
                                 <span class="px-2 py-1 text-xs rounded-full {{ $stock->status === 'available' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                                     {{ $stock->status === 'available' ? 'Rafta Mevcut' : 'Ödünç Verilmiş' }}

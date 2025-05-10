@@ -75,7 +75,10 @@ class PenaltyService
         if ($existingPenalty) {
             $existingPenalty->update([
                 'amount' => $penaltyData['amount'],
-                'payment_date' => now()
+                'payment_date' => now(),
+                'days_late' => $penaltyData['days_late'],
+                'base_amount' => $penaltyData['base_amount'],
+                'daily_rate' => $penaltyData['daily_rate']
             ]);
             
             return $existingPenalty;
@@ -88,7 +91,10 @@ class PenaltyService
             'amount' => $penaltyData['amount'],
             'payment_date' => now(),
             'payment_method' => 'nakit', // Varsayılan olarak nakit
-            'status' => 'ödeme bekleniyor'
+            'status' => 'ödeme bekleniyor',
+            'days_late' => $penaltyData['days_late'],
+            'base_amount' => $penaltyData['base_amount'],
+            'daily_rate' => $penaltyData['daily_rate']
         ]);
     }
 } 

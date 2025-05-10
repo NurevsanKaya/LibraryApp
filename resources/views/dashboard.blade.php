@@ -26,7 +26,7 @@
                                 <li>
                                     <span class="font-medium">{{ $book->stock->book->name ?? 'Bilinmeyen Kitap' }}</span> - 
                                     <span class="text-red-600">Son İade Tarihi: {{ \Carbon\Carbon::parse($book->due_date)->format('d.m.Y') }}</span>
-                                    ({{ \Carbon\Carbon::parse($book->due_date)->diffInDays(now()) }} gün gecikme)
+                                    ({{ floor(\Carbon\Carbon::parse($book->due_date)->diffInDays(now())) }} gün gecikme)
                                 </li>
                             @endforeach
                         </ul>

@@ -322,7 +322,7 @@ class BookReportController extends Controller
         $queryType = 'last_month';
 
         return view('admin.book-reports.partials._results', compact('books', 'queryType'));
-    }
+            }
 
     // Hiç ödünç alınmayan kitaplar için metot
     protected function getNeverBorrowedBooks(Request $request)

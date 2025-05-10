@@ -23,7 +23,16 @@ class DatabaseSeeder extends Seeder
 
         // Call seeder classes
         $this->call([
+            UserSeeder::class,
+            PublisherSeeder::class,
+            GenresSeeder::class,
+            CategoriesSeeder::class,
+            AuthorSeeder::class,
+            AcquisitionSourceSeeder::class,
             BookSeeder::class,
+            LocationSeeder::class,
+            BookshelfSeeder::class,
+            ShelfSeeder::class,
             StockSeeder::class,
             BorrowingSeeder::class,
         ]);

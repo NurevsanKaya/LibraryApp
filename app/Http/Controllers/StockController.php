@@ -18,7 +18,7 @@ class StockController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Stock::with(['book', 'shelf']);
+        $query = Stock::with(['book', 'shelf', 'acquisitionSource']);
 
         // Debug için log ekle
         Log::info('Stok Filtresi:', [

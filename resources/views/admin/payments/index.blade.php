@@ -112,23 +112,52 @@
                 <h3 class="text-lg font-bold">Dekont Görüntüle</h3>
                 <button onclick="closeImageModal()" class="text-gray-500 hover:text-gray-800">&times;</button>
             </div>
-            <img id="modalImage" src="" alt="Dekont" class="w-full h-auto rounded">
+            <div id="imageContainer" class="relative">
+                <img id="modalImage" src="" alt="Dekont" class="w-full h-auto rounded">
+                <div id="imageError" class="hidden text-red-600 text-center py-4">
+                    Görsel yüklenirken bir hata oluştu.
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         function showImage(imagePath) {
+            const modal = document.getElementById('imageModal');
+            const image = document.getElementById('modalImage');
+            const errorDiv = document.getElementById('imageError');
+            
             // Modalı göster
-            document.getElementById('imageModal').classList.remove('hidden');
-            document.getElementById('imageModal').classList.add('flex');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Hata mesajını gizle
+            errorDiv.classList.add('hidden');
+            
+            // Görseli yükle
+            image.onload = function() {
+                errorDiv.classList.add('hidden');
+            };
+            
+            image.onerror = function() {
+                errorDiv.classList.remove('hidden');
+                image.src = ''; // Hatalı görseli temizle
+            };
+            
             // Görseli modalda göster
-            document.getElementById('modalImage').src = imagePath;
+            image.src = imagePath;
         }
 
         function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            const image = document.getElementById('modalImage');
+            
             // Modalı gizle
-            document.getElementById('imageModal').classList.remove('flex');
-            document.getElementById('imageModal').classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            
+            // Görseli temizle
+            image.src = '';
         }
     </script>
 @endsection
