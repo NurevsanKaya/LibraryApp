@@ -146,11 +146,10 @@ class AdminController extends Controller
      */
     public function getBook($id)
     {
-        $book = Book::with(['authors'])->findOrFail($id);
+        $book = Book::with(['authors', 'publisher', 'category', 'genre'])->findOrFail($id);
 
         return response()->json([
-            'book' => $book,
-            'authorIds' => $book->authors->pluck('id')->toArray()
+            'book' => $book
         ]);
     }
 

@@ -68,6 +68,7 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     // Kitap Raporlama
     Route::get('/book-reports', [BookReportController::class, 'index'])->name('admin.book-reports.index');
     Route::get('/book-reports/results', [BookReportController::class, 'getResults'])->name('admin.book-reports.results');
+    Route::get('/book-reports/quick-filter/{filterType}', [BookReportController::class, 'getQuickFilterResults'])->name('admin.book-reports.quick-filter');
 
     // Kitap
     Route::get('/books', [AdminController::class, 'books'])->name('admin.books.index');
