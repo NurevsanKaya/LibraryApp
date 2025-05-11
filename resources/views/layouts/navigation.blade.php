@@ -3,9 +3,12 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
-                
-
-                
+                <!-- Logo -->
+                <div class="shrink-0 flex items-center">
+                    <a href="{{ route('anasayfa') }}" class="text-xl font-bold text-gray-800">
+                        Kütüphane
+                    </a>
+                </div>
             </div>
 
             <!-- Settings Dropdown -->
@@ -26,7 +29,7 @@
 
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
+                            {{ __('Profil') }}
                         </x-dropdown-link>
 
                         <!-- Authentication -->
@@ -36,7 +39,7 @@
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault();
                                                 this.closest('form').submit();">
-                                {{ __('Log Out') }}
+                                {{ __('Çıkış Yap') }}
                             </x-dropdown-link>
                         </form>
                     </x-slot>

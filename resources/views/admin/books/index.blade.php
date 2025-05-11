@@ -114,20 +114,24 @@
 
         <!-- Arama ve filtreleme kısmı -->
         <div class="mb-6 flex flex-col md:flex-row gap-4">
-            <div class="flex-1">
-                <input type="text" placeholder="Kitap ara..." class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex gap-4">
-                <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Kategoriler</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                    @endforeach
-                </select>
-                <button class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md">
-                    <i class="fas fa-filter mr-2"></i> Filtrele
-                </button>
-            </div>
+            <form action="{{ route('admin.books.index') }}" method="GET" class="flex-1 flex gap-4">
+                <div class="flex-1">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Kitap adı veya ISBN ile ara..." class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex gap-4">
+                    <select name="category_id" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Tüm Kategoriler</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                        <i class="fas fa-search mr-2"></i> Filtrele
+                    </button>
+                </div>
+            </form>
         </div>
 
         <!-- Başarı mesajı -->

@@ -22,7 +22,7 @@ use App\Http\Controllers\AcquisitionSourceController;
 
 Route::get('/', function () {
     return view('home');
-});
+})->name('anasayfa');
 Route::get('/about', function () {
     return view('aboutus');
 });
