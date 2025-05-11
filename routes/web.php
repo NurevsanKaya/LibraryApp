@@ -153,6 +153,8 @@ Route::middleware('auth')->group(function () {
     //geçmiş ödünçler
     Route::get('/my-borrowings-old', [UserOldBorrowController::class, 'index'])->name('user.oldborrowings');
 
+    Route::get('/user/overdue', [App\Http\Controllers\User\OverdueController::class, 'index'])->name('user.overdue');
+
 });
 
 require __DIR__.'/auth.php';

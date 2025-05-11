@@ -76,8 +76,15 @@
                 <a href="{{ route('user.oldborrowings') }}"
                    class="flex items-center gap-3 px-4 py-2 rounded-lg transition-all
                   {{ request()->routeIs('user.oldborrowings') ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700' }}">
-                    <i class="fas fa-book-reader"></i>
+                    <i class="fas fa-history"></i>
                     <span>Geçmiş Ödünç İşlemleri</span>
+                </a>
+
+                <a href="{{ route('user.overdue') }}"
+                   class="flex items-center gap-3 px-4 py-2 rounded-lg transition-all
+                  {{ request()->routeIs('user.overdue') ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700' }}">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Geçikmiş Kitaplarım</span>
                 </a>
 
                 <a href="{{ route('user.penalties') }}"
