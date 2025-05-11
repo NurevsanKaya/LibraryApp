@@ -26,7 +26,6 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'is_active' => ['required', 'boolean'],
         ]);
 
         $user = User::create([
@@ -34,7 +33,7 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
-            'is_active' => $request->is_active,
+            'is_active' => true, // Yeni kullanıcı her zaman aktif olacak
             'role_id' => 2, // Normal kullanıcı rolü
         ]);
 

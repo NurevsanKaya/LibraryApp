@@ -21,7 +21,7 @@ class BookReportController extends Controller
     {
         // İstatistik kartları için verileri hazırla
         $totalBooks = Book::count();
-        $borrowedBooks = Stock::where('status', 'borrowed')->count();
+        $borrowedBooks = Borrowing::whereNull('return_date')->where('status', 'active')->count();
         $dueTodayBooks = Borrowing::whereNull('return_date')
             ->whereDate('due_date', Carbon::today())
             ->count();

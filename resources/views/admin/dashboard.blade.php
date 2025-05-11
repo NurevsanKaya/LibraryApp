@@ -40,7 +40,6 @@
                     <div>
                         <p class="text-sm text-yellow-600 font-medium">Aktif Ödünç Alınanlar</p>
                         <p class="text-2xl font-bold text-yellow-800">{{ $activeBorrowings }}</p>
-                        <!-- geri getirilme tarihi girilmemiş satırları getirir -->
                     </div>
                 </div>
             </div>
@@ -67,23 +66,62 @@
                     <table class="min-w-full bg-white">
                         <thead>
                             <tr>
-                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kullanıcı</th>
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kitap</th>
-                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ödünç tarihi</th>
-                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Geri Getirme Tarihi</th>
+                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kategori</th>
+                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ödünç Tarihi</th>
+                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">İade Tarihi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($recentBorrowings as $borrowing)
                                 <tr>
-                                    <td class="py-2 px-4 border-b border-gray-200">{{ $borrowing->user->name ?? 'N/A' }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200">{{ $borrowing->book->name ?? 'N/A' }}</td>
+                                    <td class="py-2 px-4 border-b border-gray-200">
+                                        <div class="text-sm font-medium text-gray-900">{{ $borrowing->book_name }}</div>
+                                        <div class="text-xs text-gray-500">ISBN: {{ $borrowing->isbn }}</div>
+                                    </td>
+                                    <td class="py-2 px-4 border-b border-gray-200">{{ $borrowing->category_name ?? 'Belirtilmemiş' }}</td>
                                     <td class="py-2 px-4 border-b border-gray-200">{{ $borrowing->borrow_date ? date('d/m/Y', strtotime($borrowing->borrow_date)) : 'N/A' }}</td>
                                     <td class="py-2 px-4 border-b border-gray-200">{{ $borrowing->due_date ? date('d/m/Y', strtotime($borrowing->due_date)) : 'N/A' }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="py-2 px-4 border-b border-gray-200 text-center text-gray-500">Ödünç alınan kitap yok </td>
+                                    <td colspan="4" class="py-2 px-4 border-b border-gray-200 text-center text-gray-500">Ödünç alınan kitap yok</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Most Borrowed Books -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">En çok ödünç alınanlar</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kitap</th>
+                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kategori</th>
+                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ödünç Sayısı</th>
+                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Son Ödünç</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($mostBorrowedBooks as $book)
+                                <tr>
+                                    <td class="py-2 px-4 border-b border-gray-200">
+                                        <div class="text-sm font-medium text-gray-900">{{ $book->name }}</div>
+                                        <div class="text-xs text-gray-500">ISBN: {{ $book->isbn }}</div>
+                                    </td>
+                                    <td class="py-2 px-4 border-b border-gray-200">{{ $book->category->name ?? 'Belirtilmemiş' }}</td>
+                                    <td class="py-2 px-4 border-b border-gray-200">
+                                        <span class="text-sm font-medium text-blue-600">{{ $book->borrow_count }} kez</span>
+                                    </td>
+                                    <td class="py-2 px-4 border-b border-gray-200">{{ $book->last_borrowed_date ? date('d/m/Y', strtotime($book->last_borrowed_date)) : 'N/A' }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="py-2 px-4 border-b border-gray-200 text-center text-gray-500">Henüz ödünç alınan kitap yok</td>
                                 </tr>
                             @endforelse
                         </tbody>
