@@ -18,11 +18,26 @@ class StockController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Stock::with(['book', 'shelf']);
+        $query = Stock::with(['book', 'shelf', 'acquisitionSource']);
+
+        // Debug için log ekle
+        Log::info('Stok Filtresi:', [
+            'status' => $request->status,
+            'search' => $request->search,
+            'tüm_parametreler' => $request->all(),
+            'url' => $request->fullUrl()
+        ]);
 
         // Filtrele
         if ($request->has('status') && $request->status !== '') {
             $query->where('status', $request->status);
+            // Debug için log ekle
+            Log::info('Filtreleme uygulandı:', [
+                'status' => $request->status,
+                'sql' => $query->toSql(),
+                'bindings' => $query->getBindings(),
+                'raw_query' => vsprintf(str_replace(['?'], ['\'%s\''], $query->toSql()), $query->getBindings())
+            ]);
         }
 
         // Barkod ile ara
@@ -31,13 +46,22 @@ class StockController extends Controller
         }
 
         $stocks = $query->orderBy('id', 'desc')->paginate(10);
+        
+        // Debug için log ekle
+        Log::info('Sonuç:', [
+            'stok_sayısı' => $stocks->count(),
+            'toplam_sayfa' => $stocks->lastPage(),
+            'mevcut_sayfa' => $stocks->currentPage(),
+            'her_sayfadaki_kayıt' => $stocks->perPage(),
+            'ilk_kayıt' => $stocks->firstItem(),
+            'son_kayıt' => $stocks->lastItem()
+        ]);
+
         $shelves = Shelf::all();
         $acquisitionSources = AcquisitionSource::all();
         return view('admin.stocks.index', 
-        compact('stocks',
-                     'shelves',
-                                'acquisitionSources'
-                    ));
+            compact('stocks', 'shelves', 'acquisitionSources')
+        );
     }
 
     /**
@@ -52,8 +76,13 @@ class StockController extends Controller
             'acquisition_source_id' => 'nullable|exists:acquisition_source,id',
             'acquisition_price' => 'nullable|numeric|min:0',
             'acquisition_date' => 'nullable|date',
-            'status' => 'required|in:active,borrowed',
+            'status' => 'required|in:available,borrowed',
         ]);
+
+        // Status değerini available olarak ayarla
+        if (!isset($validated['status'])) {
+            $validated['status'] = 'available';
+        }
 
         Stock::create($validated);
 
@@ -79,10 +108,9 @@ class StockController extends Controller
             'barcode' => 'required|string|max:50|unique:stocks,barcode,' . $stock->id,
             'book_id' => 'required|exists:books,id',
             'shelf_id' => 'required|exists:shelves,id',
-            'acquisition_source_id' => 'nullable|exists:acquisition_sources,id',
+            'acquisition_source_id' => 'nullable|exists:acquisition_source,id',
             'acquisition_price' => 'nullable|numeric|min:0',
             'acquisition_date' => 'nullable|date',
-            
         ]);
 
         $stock->update($validated);

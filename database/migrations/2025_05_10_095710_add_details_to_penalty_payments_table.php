@@ -12,10 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('penalty_payments', function (Blueprint $table) {
-            $table->string('receipt_path')->nullable();
-            $table->enum('status', ['ödeme bekleniyor', 'bekliyor', 'onaylandı', 'reddedildi'])
-                ->default('ödeme bekleniyor')
-                ->change();
+            $table->decimal('base_amount', 10, 2)->default(50);
+            $table->decimal('daily_rate', 10, 2)->default(5);
+            $table->unsignedInteger('days_late')->nullable();
         });
     }
 
@@ -25,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('penalty_payments', function (Blueprint $table) {
-            //
+            $table->dropColumn(['base_amount', 'daily_rate', 'days_late']);
         });
     }
 };

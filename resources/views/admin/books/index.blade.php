@@ -114,20 +114,24 @@
 
         <!-- Arama ve filtreleme kısmı -->
         <div class="mb-6 flex flex-col md:flex-row gap-4">
-            <div class="flex-1">
-                <input type="text" placeholder="Kitap ara..." class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex gap-4">
-                <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Kategoriler</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                    @endforeach
-                </select>
-                <button class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md">
-                    <i class="fas fa-filter mr-2"></i> Filtrele
-                </button>
-            </div>
+            <form action="{{ route('admin.books.index') }}" method="GET" class="flex-1 flex gap-4">
+                <div class="flex-1">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Kitap adı veya ISBN ile ara..." class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex gap-4">
+                    <select name="category_id" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Tüm Kategoriler</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                        <i class="fas fa-search mr-2"></i> Filtrele
+                    </button>
+                </div>
+            </form>
         </div>
 
         <!-- Başarı mesajı -->
@@ -193,7 +197,7 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
-                                    <button class="text-gray-500 hover:text-gray-700">
+                                    <button class="text-gray-500 hover:text-gray-700" onclick="showBookDetails({{ $book->id }})">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -338,6 +342,72 @@
         </div>
     </div>
 
+    <!-- Book Details Modal -->
+    <div id="bookDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">
+                    Kitap Detayları
+                </h3>
+                <button type="button" class="text-gray-400 hover:text-gray-500" onclick="hideBookDetailsModal()">
+                    <span class="sr-only">Kapat</span>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="bookDetailsContent" class="space-y-4">
+                <!-- Yükleniyor göstergesi -->
+                <div id="bookDetailsLoading" class="flex justify-center items-center p-4">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                </div>
+
+                <!-- Kitap detayları buraya gelecek -->
+                <div id="bookDetails" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Temel Bilgiler</h4>
+                            <dl class="space-y-2">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Kitap Adı</dt>
+                                    <dd id="bookName" class="text-sm text-gray-900"></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">ISBN</dt>
+                                    <dd id="bookIsbn" class="text-sm text-gray-900"></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Yayın Yılı</dt>
+                                    <dd id="bookPublicationYear" class="text-sm text-gray-900"></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Yayınevi</dt>
+                                    <dd id="bookPublisher" class="text-sm text-gray-900"></dd>
+                                </div>
+                            </dl>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Kategoriler</h4>
+                            <dl class="space-y-2">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Ana Kategori</dt>
+                                    <dd id="bookCategory" class="text-sm text-gray-900"></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Tür</dt>
+                                    <dd id="bookGenre" class="text-sm text-gray-900"></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Yazarlar</dt>
+                                    <dd id="bookAuthors" class="text-sm text-gray-900"></dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Modal işlemleri için JavaScript
         function showModal(mode, bookId = null) {
@@ -345,23 +415,17 @@
             const modalTitle = document.getElementById('modal-title');
             const form = document.getElementById('bookForm');
             const methodField = document.getElementById('form-method');
-            const loadingSpinner = document.getElementById('loadingSpinner');
             const saveButton = document.getElementById('saveButton');
-
-            // Form sıfırlama
-            form.reset();
+            const loadingSpinner = document.getElementById('loadingSpinner');
 
             if (mode === 'add') {
                 modalTitle.textContent = 'Yeni Kitap Ekle';
+                form.reset();
                 form.action = "{{ route('admin.books.store') }}";
                 methodField.value = 'POST';
                 saveButton.textContent = 'Kaydet';
-
-                // Modalı göster
-                modal.classList.remove('hidden');
-                
-                // Select2'yi yeniden başlat
-                initSelect2();
+                document.getElementById('bookForm').classList.remove('hidden');
+                loadingSpinner.classList.add('hidden');
             }
             else if (mode === 'edit' && bookId) {
                 modalTitle.textContent = 'Kitap Düzenle';
@@ -389,7 +453,7 @@
                         document.getElementById('genres_id').value = data.book.genres_id;
 
                         // Yazarları seç
-                        const authorIds = data.authorIds;
+                        const authorIds = data.book.authors.map(author => author.id);
                         if ($('#authors_select').length) {
                             $('#authors_select').val(authorIds).trigger('change');
                         } else {
@@ -407,56 +471,82 @@
                         initSelect2();
                     })
                     .catch(error => {
-                        console.error('Error:', error);
-                        hideModal();
-                        alert('Kitap bilgileri yüklenirken bir hata oluştu.');
+                        console.error('Kitap verileri alınırken hata oluştu:', error);
+                        loadingSpinner.classList.add('hidden');
+                        alert('Kitap verileri alınırken bir hata oluştu.');
                     });
             }
+
+            // Modalı göster
+            modal.classList.remove('hidden');
         }
 
         function hideModal() {
-            const modal = document.getElementById('bookModal');
-            modal.classList.add('hidden');
+            document.getElementById('bookModal').classList.add('hidden');
         }
-        
-        // Select2'yi başlat
+
+        // Kitap detaylarını göster
+        function showBookDetails(bookId) {
+            const modal = document.getElementById('bookDetailsModal');
+            const loadingSpinner = document.getElementById('bookDetailsLoading');
+            const bookDetails = document.getElementById('bookDetails');
+
+            // Modalı göster
+            modal.classList.remove('hidden');
+            loadingSpinner.classList.remove('hidden');
+            bookDetails.classList.add('hidden');
+
+            // AJAX ile kitap detaylarını çek
+            fetch(`/admin/books/${bookId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Detayları doldur
+                    document.getElementById('bookName').textContent = data.book.name;
+                    document.getElementById('bookIsbn').textContent = data.book.isbn;
+                    document.getElementById('bookPublicationYear').textContent = data.book.publication_year;
+                    document.getElementById('bookPublisher').textContent = data.book.publisher ? data.book.publisher.name : 'Belirtilmemiş';
+                    document.getElementById('bookCategory').textContent = data.book.category ? data.book.category.name : 'Belirtilmemiş';
+                    document.getElementById('bookGenre').textContent = data.book.genre ? data.book.genre.name : 'Belirtilmemiş';
+                    document.getElementById('bookAuthors').textContent = data.book.authors ? data.book.authors.map(author => `${author.first_name} ${author.last_name}`).join(', ') : 'Belirtilmemiş';
+
+                    // Yükleniyor göstergesini gizle ve detayları göster
+                    loadingSpinner.classList.add('hidden');
+                    bookDetails.classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Kitap detayları alınırken hata oluştu:', error);
+                    loadingSpinner.classList.add('hidden');
+                    bookDetails.innerHTML = '<p class="text-red-500 text-center">Kitap detayları alınırken bir hata oluştu.</p>';
+                    bookDetails.classList.remove('hidden');
+                });
+        }
+
+        // Kitap detayları modalını kapat
+        function hideBookDetailsModal() {
+            document.getElementById('bookDetailsModal').classList.add('hidden');
+        }
+
+        // Select2 başlatma fonksiyonu
         function initSelect2() {
-            // Yazarlar için Select2
-            $('#authors_select').select2({
-                placeholder: "Yazar seçin veya arayın...",
-                allowClear: true,
-                width: '100%',
-                dropdownParent: $('#bookModal'),
-                language: {
-                    noResults: function() {
-                        return "Sonuç bulunamadı";
-                    },
-                    searching: function() {
-                        return "Aranıyor...";
-                    }
-                },
-                // Tailwind CSS sınıflarını ekle
-                templateSelection: formatSelection,
-                templateResult: formatResult
-            });
-            
             // Yayınevi için Select2
             $('#publisher_id').select2({
-                placeholder: "Yayınevi seçin veya arayın...",
+                theme: 'tailwind',
+                placeholder: 'Yayınevi Seçin',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Yazarlar için Select2
+            $('#authors_select').select2({
+                theme: 'tailwind',
+                placeholder: 'Yazar(lar) Seçin',
                 allowClear: true,
                 width: '100%',
-                dropdownParent: $('#bookModal'),
-                language: {
-                    noResults: function() {
-                        return "Sonuç bulunamadı";
-                    },
-                    searching: function() {
-                        return "Aranıyor...";
-                    }
-                }
+                templateResult: formatResult,
+                templateSelection: formatSelection
             });
-            
-            // Select2 dropdown için genel stil
+
+            // Select2 stillerini ayarla
             setTimeout(function() {
                 // Dropdown ve arama alanı
                 $('.select2-dropdown').addClass('border border-gray-300 rounded-md');

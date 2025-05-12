@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\Stock;
+use App\Services\PenaltyService;
 use Illuminate\Support\Facades\DB;
 
 class BorrowingController extends Controller
@@ -231,14 +232,23 @@ class BorrowingController extends Controller
             $borrowing->stock->update(['status' => 'available']);
         }
 
-        // Gecikme kontrolü ve ceza işlemi (opsiyonel)
+        // Gecikme kontrolü ve ceza işlemi
         $dueDate = Carbon::parse($borrowing->due_date);
         $returnDate = Carbon::parse($request->return_date);
 
         if ($returnDate->gt($dueDate)) {
-            // Gecikme durumu - uyarı mesajı gösterilebilir
-            return redirect()->route('admin.borrowings.index')
-                    ->with('warning', 'Kitap gecikmeli olarak iade edildi. (' . $dueDate->diffInDays($returnDate) . ' gün gecikme)');
+            // Gecikme durumu - ceza oluştur
+            $penaltyService = new PenaltyService();
+            $penalty = $penaltyService->createOrUpdatePenalty($borrowing);
+            
+            if ($penalty) {
+                return redirect()->route('admin.borrowings.index')
+                        ->with('warning', 'Kitap gecikmeli olarak iade edildi. (' . $dueDate->diffInDays($returnDate) . ' gün gecikme). ' . 
+                               $penalty->amount . ' TL ceza oluşturuldu.');
+            } else {
+                return redirect()->route('admin.borrowings.index')
+                        ->with('warning', 'Kitap gecikmeli olarak iade edildi. (' . $dueDate->diffInDays($returnDate) . ' gün gecikme)');
+            }
         }
 
         return redirect()->route('admin.borrowings.index')

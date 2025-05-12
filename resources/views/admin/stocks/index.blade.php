@@ -18,7 +18,7 @@
             <div class="flex gap-4">
                 <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Tüm Durumlar</option>
-                    <option value="active">Mevcut</option>
+                    <option value="available">Rafta Mevcut</option>
                     <option value="borrowed">Ödünç Verilmiş</option>
                 </select>
                 <button class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md" onclick="filterStocks()">
@@ -60,11 +60,11 @@
                             <td class="py-3 px-4 border-b border-gray-200">{{ $stock->barcode }}</td>
                             <td class="py-3 px-4 border-b border-gray-200">{{ $stock->book->name }}</td>
                             <td class="py-3 px-4 border-b border-gray-200">{{ $stock->shelf->shelf_number }}</td>
-                            <td class="py-3 px-4 border-b border-gray-200">{{ $stock->acquisition_source }}</td>
-                            <td class="py-3 px-4 border-b border-gray-200">{{ $stock->acquisition_date }}</td>
+                            <td class="py-3 px-4 border-b border-gray-200">{{ $stock->acquisitionSource->name }}</td>
+                            <td class="py-3 px-4 border-b border-gray-200">{{ \Carbon\Carbon::parse($stock->acquisition_date)->format('d.m.Y') }}</td>
                             <td class="py-3 px-4 border-b border-gray-200">
-                                <span class="px-2 py-1 text-xs rounded-full {{ $stock->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                    {{ $stock->status === 'available' ? 'Mevcut' : 'Ödünç Verilmiş' }}
+                                <span class="px-2 py-1 text-xs rounded-full {{ $stock->status === 'available' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                    {{ $stock->status === 'available' ? 'Rafta Mevcut' : 'Ödünç Verilmiş' }}
                                 </span>
                             </td>
                             <td class="py-3 px-4 border-b border-gray-200">
@@ -79,7 +79,7 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
-                                    <button class="text-gray-500 hover:text-gray-700" onclick="showModal('view', {{ $stock->id }})">
+                                    <button class="text-gray-500 hover:text-gray-700" onclick="showStockDetails({{ $stock->id }})">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -213,7 +213,7 @@
                         <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Durum</label>
                         <select name="status" id="status" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            <option value="active">Mevcut</option>
+                            <option value="available">Rafta Mevcut</option>
                             <option value="borrowed">Ödünç Verilmiş</option>
                         </select>
                     </div>
@@ -230,6 +230,72 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Stock Details Modal -->
+    <div id="stockDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">
+                    Stok Detayları
+                </h3>
+                <button type="button" class="text-gray-400 hover:text-gray-500" onclick="hideStockDetailsModal()">
+                    <span class="sr-only">Kapat</span>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="stockDetailsContent" class="space-y-4">
+                <!-- Yükleniyor göstergesi -->
+                <div id="stockDetailsLoading" class="flex justify-center items-center p-4">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                </div>
+
+                <!-- Stok detayları buraya gelecek -->
+                <div id="stockDetails" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Temel Bilgiler</h4>
+                            <dl class="space-y-2">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Barkod</dt>
+                                    <dd id="stockBarcode" class="text-sm text-gray-900"></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Kitap Adı</dt>
+                                    <dd id="stockBookName" class="text-sm text-gray-900"></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Raf</dt>
+                                    <dd id="stockShelf" class="text-sm text-gray-900"></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Durum</dt>
+                                    <dd id="stockStatus" class="text-sm text-gray-900"></dd>
+                                </div>
+                            </dl>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Edinme Bilgileri</h4>
+                            <dl class="space-y-2">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Edinme Kaynağı</dt>
+                                    <dd id="stockAcquisitionSource" class="text-sm text-gray-900"></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Edinme Tarihi</dt>
+                                    <dd id="stockAcquisitionDate" class="text-sm text-gray-900"></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Edinme Fiyatı</dt>
+                                    <dd id="stockAcquisitionPrice" class="text-sm text-gray-900"></dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -459,9 +525,92 @@
         }
 
         function filterStocks() {
-            const status = document.getElementById('statusFilter').value;
-            const search = document.getElementById('stockSearch').value;
-            window.location.href = `/admin/stocks?status=${status}&search=${search}`;
+            // Seçili durumu al
+            const durum = document.getElementById('statusFilter').value;
+            
+            // Arama metnini al
+            const barkod = document.getElementById('stockSearch').value;
+            
+            // Yeni URL oluştur
+            let yeniURL = '/admin/stocks';
+            
+            // Parametreleri ekle
+            let parametreler = [];
+            
+            if (durum) {
+                parametreler.push('status=' + durum);
+            }
+            
+            if (barkod) {
+                parametreler.push('search=' + barkod);
+            }
+            
+            // Parametreler varsa URL'ye ekle
+            if (parametreler.length > 0) {
+                yeniURL = yeniURL + '?' + parametreler.join('&');
+            }
+            
+            // Sayfayı yenile
+            window.location.href = yeniURL;
+        }
+
+        // Sayfa yüklendiğinde önceki filtreleri seç
+        document.addEventListener('DOMContentLoaded', function() {
+            // URL'den parametreleri al
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Durum filtresini ayarla
+            const durum = urlParams.get('status');
+            if (durum) {
+                document.getElementById('statusFilter').value = durum;
+            }
+            
+            // Barkod filtresini ayarla
+            const barkod = urlParams.get('search');
+            if (barkod) {
+                document.getElementById('stockSearch').value = barkod;
+            }
+        });
+
+        // Stok detaylarını göster
+        function showStockDetails(stockId) {
+            const modal = document.getElementById('stockDetailsModal');
+            const loadingSpinner = document.getElementById('stockDetailsLoading');
+            const stockDetails = document.getElementById('stockDetails');
+
+            // Modalı göster
+            modal.classList.remove('hidden');
+            loadingSpinner.classList.remove('hidden');
+            stockDetails.classList.add('hidden');
+
+            // AJAX ile stok detaylarını çek
+            fetch(`/admin/stocks/${stockId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Detayları doldur
+                    document.getElementById('stockBarcode').textContent = data.stock.barcode;
+                    document.getElementById('stockBookName').textContent = data.stock.book ? data.stock.book.name : 'Belirtilmemiş';
+                    document.getElementById('stockShelf').textContent = data.stock.shelf ? data.stock.shelf.shelf_number : 'Belirtilmemiş';
+                    document.getElementById('stockStatus').textContent = data.stock.status === 'available' ? 'Rafta Mevcut' : 'Ödünç Verilmiş';
+                    document.getElementById('stockAcquisitionSource').textContent = data.stock.acquisition_source ? data.stock.acquisition_source : 'Belirtilmemiş';
+                    document.getElementById('stockAcquisitionDate').textContent = data.stock.acquisition_date ? data.stock.acquisition_date : 'Belirtilmemiş';
+                    document.getElementById('stockAcquisitionPrice').textContent = data.stock.acquisition_price ? data.stock.acquisition_price + ' TL' : 'Belirtilmemiş';
+
+                    // Yükleniyor göstergesini gizle ve detayları göster
+                    loadingSpinner.classList.add('hidden');
+                    stockDetails.classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Stok detayları alınırken hata oluştu:', error);
+                    loadingSpinner.classList.add('hidden');
+                    stockDetails.innerHTML = '<p class="text-red-500 text-center">Stok detayları alınırken bir hata oluştu.</p>';
+                    stockDetails.classList.remove('hidden');
+                });
+        }
+
+        // Stok detayları modalını kapat
+        function hideStockDetailsModal() {
+            document.getElementById('stockDetailsModal').classList.add('hidden');
         }
     </script>
 @endsection

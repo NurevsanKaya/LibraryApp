@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use Illuminate\Http\Request;
+use App\Models\Publisher;
+use App\Models\Categories;
+use Illuminate\Support\Facades\Log;
 
 class BookController extends Controller
 {
@@ -36,7 +39,24 @@ class BookController extends Controller
      */
     public function show(Book $book)
     {
-        //
+        try {
+            // Debug için
+            \Log::info('Book ID: ' . $book->id);
+            \Log::info('Book Name: ' . $book->name);
+            
+            // İlişkileri yükle
+            $book->load(['authors', 'publisher', 'category', 'stocks']);
+            
+            // İlişkileri kontrol et
+            \Log::info('Authors: ' . $book->authors->count());
+            \Log::info('Publisher: ' . ($book->publisher ? 'exists' : 'null'));
+            \Log::info('Category: ' . ($book->category ? 'exists' : 'null'));
+            
+            return view('books.show', compact('book'));
+        } catch (\Exception $e) {
+            \Log::error('Book show error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Kitap bilgileri yüklenirken bir hata oluştu.');
+        }
     }
 
     /**
@@ -62,20 +82,32 @@ class BookController extends Controller
     {
         //
     }
+
     public function search(Request $request)
     {
-        $query = $request->input('query'); // Kullanıcının arama sorgusu
+        $query = $request->input('query');
 
-        // Kitap adına veya yazar adına göre arama yap
-        $books = Book::where('name', 'LIKE', '%' . $query . '%')
-            ->orWhereHas('authors', function ($q) use ($query) {
-                $q->where('name', 'LIKE', '%' . $query . '%'); // Yazar adına göre arama
+        // Ana arama sorgusu
+        $books = Book::with(['authors', 'publisher'])
+            ->where(function($q) use ($query) {
+                $q->where('name', 'LIKE', '%' . $query . '%')
+                  ->orWhereHas('authors', function ($q) use ($query) {
+                      $q->where('name', 'LIKE', '%' . $query . '%');
+                  });
             })
-            ->get();
+            ->paginate(10);
 
-        // Sonuçları bir view dosyasına gönder
-        return view('search-results', compact('books', 'query'));
+        // Benzer kitapları bul (eğer sonuç yoksa)
+        $suggestions = null;
+        if ($books->isEmpty()) {
+            $suggestions = Book::with(['authors', 'publisher'])
+                ->where('name', 'LIKE', '%' . substr($query, 0, 3) . '%')
+                ->orWhere('name', 'LIKE', '%' . substr($query, -3) . '%')
+                ->take(5)
+                ->get();
+        }
+
+        return view('search-results', compact('books', 'query', 'suggestions'));
     }
-
 }
 

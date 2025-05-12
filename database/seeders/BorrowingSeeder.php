@@ -18,52 +18,66 @@ class BorrowingSeeder extends Seeder
     public function run(): void
     {
         DB::transaction(function () {
-            // Önce en az bir kullanıcımız olduğundan emin olalım
-            $user = User::firstOrCreate(
-                ['email' => 'member@example.com'],
-                [
-                    'name' => 'Test Üye',
-                    'password' => bcrypt('password'),
-                    'role_id' => 2, // Üye rolü
-                    'is_active' => 1,
-                ]
-            );
-            
-            // Status = available olan stokları al
-            $availableStocks = Stock::where('status', 'available')->get();
-            
-            if ($availableStocks->isEmpty()) {
-                $this->command->error('Ödünç verilebilecek müsait stok bulunamadı!');
-                return;
-            }
-            
-            // Rastgele 1-2 stok seç ve ödünç ver
-            $borrowCount = min(rand(1, 2), $availableStocks->count());
-            $selectedStocks = $availableStocks->random($borrowCount);
-            
-            foreach ($selectedStocks as $stock) {
-                // Ödünç verme tarihi için bugünden 1-30 gün öncesi
-                $borrowDate = Carbon::now()->subDays(rand(1, 30))->format('Y-m-d');
-                // Teslim tarihi ödünç verme tarihinden 15 gün sonrası
-                $dueDate = Carbon::parse($borrowDate)->addDays(15)->format('Y-m-d');
-                
-                // Eğer bu stock daha önce ödünç verilmemişse
-                if (!Borrowing::where('stock_id', $stock->id)->whereNull('return_date')->exists()) {
-                    // Stok durumunu güncelle
-                    $stock->update(['status' => 'borrowed']);
+            // Önce borrowings tablosunu temizle
+            DB::table('borrowings')->truncate();
+
+            $users = User::where('role_id', 2)->get(); // Sadece üye rolündeki kullanıcılar
+            $stocks = Stock::where('status', 'available')->get();
+            $today = Carbon::now();
+
+            foreach ($users as $user) {
+                // Her kullanıcı için 1-3 adet ödünç kaydı oluştur
+                $borrowCount = rand(1, 3);
+                $usedStocks = [];
+
+                for ($i = 0; $i < $borrowCount; $i++) {
+                    // Kullanılmamış bir stok seç
+                    $availableStocks = $stocks->whereNotIn('id', $usedStocks);
+                    if ($availableStocks->isEmpty()) {
+                        break;
+                    }
+                    $stock = $availableStocks->random();
+                    $usedStocks[] = $stock->id;
+
+                    // Ödünç alma tarihi (son 1 yıl içinde rastgele bir tarih)
+                    $borrowDate = $today->copy()->subDays(rand(0, 365));
                     
-                    // Ödünç kaydını oluştur - status alanında 'active' kullan
+                    // Teslim tarihi (ödünç alma tarihinden 15 gün sonra)
+                    $dueDate = $borrowDate->copy()->addDays(15);
+
+                    // Durum belirleme
+                    $status = rand(0, 2); // 0: iade edilmiş, 1: aktif, 2: gecikmiş
+                    
+                    if ($status === 0) {
+                        // İade edilmiş
+                        $returnDate = $dueDate->copy()->subDays(rand(0, 5)); // Teslim tarihinden önce iade
+                        $status = 'completed';
+                    } elseif ($status === 1) {
+                        // Aktif
+                        $returnDate = null;
+                        $status = 'active';
+                    } else {
+                        // Gecikmiş
+                        $returnDate = null;
+                        $status = 'active';
+                        $dueDate = $borrowDate->copy()->addDays(5); // 5 günlük süre ver
+                    }
+
                     Borrowing::create([
                         'user_id' => $user->id,
                         'stock_id' => $stock->id,
                         'borrow_date' => $borrowDate,
                         'due_date' => $dueDate,
-                        'status' => 'active',
+                        'return_date' => $returnDate,
+                        'status' => $status
                     ]);
+
+                    // Stok durumunu güncelle
+                    $stock->update(['status' => 'borrowed']);
                 }
             }
-            
-            $this->command->info("$borrowCount adet kitap ödünç verildi.");
+
+            $this->command->info('Ödünç kayıtları başarıyla oluşturuldu.');
         });
     }
 } 

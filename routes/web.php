@@ -22,7 +22,7 @@ use App\Http\Controllers\AcquisitionSourceController;
 
 Route::get('/', function () {
     return view('home');
-});
+})->name('anasayfa');
 Route::get('/about', function () {
     return view('aboutus');
 });
@@ -49,6 +49,7 @@ Route::get('/contact', function () {
     return view('contact');
 });
 Route::get('/search', [BookController::class, 'search'])->name('search');
+Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
 
 
 Route::get('/dashboard', [UserDashboardController::class, 'dashboard'])
@@ -68,6 +69,7 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     // Kitap Raporlama
     Route::get('/book-reports', [BookReportController::class, 'index'])->name('admin.book-reports.index');
     Route::get('/book-reports/results', [BookReportController::class, 'getResults'])->name('admin.book-reports.results');
+    Route::get('/book-reports/quick-filter/{filterType}', [BookReportController::class, 'getQuickFilterResults'])->name('admin.book-reports.quick-filter');
 
     // Kitap
     Route::get('/books', [AdminController::class, 'books'])->name('admin.books.index');
@@ -128,6 +130,10 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
     Route::get('/payments', [\App\Http\Controllers\PenaltyPaymentController::class, 'index'])->name('admin.payments.index');
     Route::post('/penalties/{id}/approve', [\App\Http\Controllers\PenaltyPaymentController::class, 'approve'])->name('admin.penalty.approve');
     Route::post('/penalties/{id}/reject', [\App\Http\Controllers\PenaltyPaymentController::class, 'reject'])->name('admin.penalty.reject');
+    
+    // Ceza Ayarları
+    Route::get('/penalty-settings', [\App\Http\Controllers\PenaltySettingController::class, 'index'])->name('admin.penalty.settings');
+    Route::post('/penalty-settings', [\App\Http\Controllers\PenaltySettingController::class, 'update'])->name('admin.penalty.settings.update');
 });
 
 Route::middleware('auth')->group(function () {
@@ -146,6 +152,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     //geçmiş ödünçler
     Route::get('/my-borrowings-old', [UserOldBorrowController::class, 'index'])->name('user.oldborrowings');
+
+    Route::get('/user/overdue', [App\Http\Controllers\User\OverdueController::class, 'index'])->name('user.overdue');
 
 });
 

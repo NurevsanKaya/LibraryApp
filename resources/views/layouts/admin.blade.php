@@ -140,7 +140,7 @@
                             </a>
                         </li>
                         <li class="mb-3">
-                            <a href="{{ route('admin.payments.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-md {{ request()->routeIs('admin.borrowings.*') ? 'bg-gray-200' : '' }}">
+                            <a href="{{ route('admin.payments.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-md {{ request()->routeIs('admin.payments.*') ? 'bg-gray-200' : '' }}">
                                 <i class="fas fa-exchange-alt mr-3"></i>
                               Ceza İşlemleri
                             </a>

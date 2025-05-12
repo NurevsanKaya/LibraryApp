@@ -97,7 +97,7 @@
                 <select name="author_id" class="w-full rounded-md border-gray-300">
                     <option value="">Seçiniz</option>
                     @foreach($authors as $author)
-                        <option value="{{ $author->id }}">{{ $author->name }} {{ $author->surname }}</option>
+                        <option value="{{ $author->id }}">{{ $author->first_name }} {{ $author->last_name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -193,88 +193,75 @@
 </div>
 
 <script>
+// Sayfa yüklendiğinde çalışacak kodlar
 document.addEventListener('DOMContentLoaded', function() {
+    // Gerekli elementleri seçelim
     const form = document.getElementById('filterForm');
     const resultsDiv = document.getElementById('results');
-    const quickFilters = document.querySelectorAll('.quick-filter');
-    let activeFilters = new Set();
-    let hasSearched = false;
+    const quickFilterButtons = document.querySelectorAll('.quick-filter');
 
-    // Form submit olayını dinle
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        hasSearched = true;
-        // Form submit edildiğinde tüm hızlı filtreleri temizle
-        quickFilters.forEach(btn => {
-            btn.classList.remove('active');
-            btn.querySelector('.fa-check').classList.add('opacity-0');
-            btn.classList.remove('ring-2', 'ring-offset-2');
-        });
-        activeFilters.clear();
-        fetchResults();
-    });
-
-    // Hızlı filtre butonlarını dinle
-    quickFilters.forEach(button => {
+    // Tüm hızlı filtre butonlarına tıklama olayı ekleyelim
+    quickFilterButtons.forEach(button => {
         button.addEventListener('click', function() {
-            const filter = this.dataset.filter;
-            hasSearched = true;
+            // Tıklanan butonun filtre tipini alalım
+            const filterType = this.getAttribute('data-filter');
             
-            // Filtre durumunu güncelle
-            if (activeFilters.has(filter)) {
-                // Filtre zaten aktifse, kaldır
-                activeFilters.delete(filter);
-                this.classList.remove('active');
-                this.querySelector('.fa-check').classList.add('opacity-0');
-                this.classList.remove('ring-2', 'ring-offset-2');
-            } else {
-                // Filtre aktif değilse, ekle
-                activeFilters.add(filter);
-                this.classList.add('active');
-                this.querySelector('.fa-check').classList.remove('opacity-0');
-                this.classList.add('ring-2', 'ring-offset-2');
-            }
-
-            // Form verilerini al
-            const formData = new FormData(form);
-            
-            // Aktif filtreleri formData'ya ekle
-            formData.delete('quick_filter'); // Önceki filtreleri temizle
-            activeFilters.forEach(filter => {
-                formData.append('quick_filter[]', filter);
+            // Tüm butonlardaki tik işaretlerini kaldıralım
+            quickFilterButtons.forEach(btn => {
+                btn.querySelector('.fa-check').classList.add('opacity-0');
             });
+            
+            // Tıklanan butonun tik işaretini gösterelim
+            this.querySelector('.fa-check').classList.remove('opacity-0');
 
-            fetchResults(formData);
+            // Loading mesajını gösterelim
+            resultsDiv.classList.remove('hidden');
+            resultsDiv.innerHTML = '<div class="p-4 text-center"><i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i></div>';
+
+            // Filtreleme için API'ye istek atalım
+            fetch(`/admin/book-reports/quick-filter/${filterType}`)
+                .then(response => response.text())
+                .then(html => {
+                    // Gelen sonuçları sayfada gösterelim
+                    resultsDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    // Hata durumunda kullanıcıya bilgi verelim
+                    resultsDiv.innerHTML = `
+                        <div class="p-4 text-center text-red-600">
+                            <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                            <p>Veriler yüklenirken bir hata oluştu.</p>
+                        </div>
+                    `;
+                    console.error('Hata:', error);
+                });
         });
     });
 
-    function fetchResults(formData = new FormData(form)) {
-        if (!hasSearched) return;
-
-        // Aktif filtre kontrolü
-        const hasActiveQuickFilters = activeFilters.size > 0;
-        const hasActiveFormFilters = Array.from(formData.entries()).some(([key, value]) => {
-            return value !== '' && !key.includes('quick_filter');
-        });
-
-        if (!hasActiveQuickFilters && !hasActiveFormFilters) {
-            resultsDiv.classList.add('hidden');
-            return;
-        }
-
-        resultsDiv.classList.remove('hidden');
+    // Form gönderildiğinde çalışacak kodlar
+    form.addEventListener('submit', function(e) {
+        // Formun normal davranışını engelleyelim
+        e.preventDefault();
         
-        // Loading göster
+        // Form verilerini alalım
+        const formData = new FormData(form);
+        
+        // Loading mesajını gösterelim
+        resultsDiv.classList.remove('hidden');
         resultsDiv.innerHTML = '<div class="p-4 text-center"><i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i></div>';
         
+        // Form verilerini URL parametrelerine çevirelim
         const params = new URLSearchParams(formData);
         
+        // Filtreleme için API'ye istek atalım
         fetch(`{{ route('admin.book-reports.results') }}?${params.toString()}`)
             .then(response => response.text())
             .then(html => {
+                // Gelen sonuçları sayfada gösterelim
                 resultsDiv.innerHTML = html;
             })
             .catch(error => {
+                // Hata durumunda kullanıcıya bilgi verelim
                 resultsDiv.innerHTML = `
                     <div class="p-4 text-center text-red-600">
                         <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
@@ -283,32 +270,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 console.error('Hata:', error);
             });
-    }
-
-    // Aktif filtrelerin stillerini ayarla
-    function updateFilterStyles() {
-        quickFilters.forEach(button => {
-            const filter = button.dataset.filter;
-            if (activeFilters.has(filter)) {
-                button.classList.add('active');
-                button.querySelector('.fa-check').classList.remove('opacity-0');
-                button.classList.add('ring-2', 'ring-offset-2');
-            } else {
-                button.classList.remove('active');
-                button.querySelector('.fa-check').classList.add('opacity-0');
-                button.classList.remove('ring-2', 'ring-offset-2');
-            }
-        });
-    }
+    });
 });
 </script>
 
 <style>
-.quick-filter.active {
-    font-weight: bold;
-    transform: scale(1.05);
-}
-
 .quick-filter {
     position: relative;
     transition: all 0.2s ease;
@@ -318,18 +284,14 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: translateY(-1px);
 }
 
-.quick-filter.active:hover {
-    transform: scale(1.05) translateY(-1px);
-}
-
-/* Renk bazlı ring stilleri */
-.quick-filter[data-filter="overdue"].active { @apply ring-red-500; }
-.quick-filter[data-filter="due_today"].active { @apply ring-yellow-500; }
-.quick-filter[data-filter="most_borrowed"].active { @apply ring-blue-500; }
-.quick-filter[data-filter="added_last_month"].active { @apply ring-green-500; }
-.quick-filter[data-filter="never_borrowed"].active { @apply ring-purple-500; }
-.quick-filter[data-filter="available"].active { @apply ring-emerald-500; }
-.quick-filter[data-filter="active_borrowings"].active { @apply ring-indigo-500; }
+/* Renk bazlı hover stilleri */
+.quick-filter[data-filter="overdue"]:hover { @apply bg-red-200; }
+.quick-filter[data-filter="due_today"]:hover { @apply bg-yellow-200; }
+.quick-filter[data-filter="most_borrowed"]:hover { @apply bg-blue-200; }
+.quick-filter[data-filter="added_last_month"]:hover { @apply bg-green-200; }
+.quick-filter[data-filter="never_borrowed"]:hover { @apply bg-purple-200; }
+.quick-filter[data-filter="available"]:hover { @apply bg-emerald-200; }
+.quick-filter[data-filter="active_borrowings"]:hover { @apply bg-indigo-200; }
 </style>
 
 @endsection 

@@ -11,6 +11,7 @@ use App\Models\Borrowing;
 use App\Models\Categories;
 use App\Models\Publisher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -24,8 +25,41 @@ class AdminController extends Controller
         $totalCategories = Categories::count();
 
         // Get recent borrowings
-        $recentBorrowings = Borrowing::with(['user', 'stock.book'])
-            ->latest()
+        $recentBorrowings = Borrowing::with(['stock.book', 'stock.book.authors', 'stock.book.category'])
+            ->select([
+                'borrowings.*',
+                'books.name as book_name',
+                'books.isbn',
+                'categories.name as category_name'
+            ])
+            ->join('stocks', 'borrowings.stock_id', '=', 'stocks.id')
+            ->join('books', 'stocks.book_id', '=', 'books.id')
+            ->leftJoin('categories', 'books.category_id', '=', 'categories.id')
+            ->latest('borrowings.borrow_date')
+            ->take(5)
+            ->get();
+
+        // Get most borrowed books
+        $mostBorrowedBooks = Book::query()
+            ->select([
+                'books.*',
+                DB::raw('COUNT(DISTINCT borrowings.id) as borrow_count'),
+                DB::raw('MAX(borrowings.borrow_date) as last_borrowed_date')
+            ])
+            ->join('stocks', 'books.id', '=', 'stocks.book_id')
+            ->join('borrowings', 'stocks.id', '=', 'borrowings.stock_id')
+            ->with(['category', 'publisher', 'authors'])
+            ->groupBy([
+                'books.id',
+                'books.name',
+                'books.isbn',
+                'books.publication_year',
+                'books.category_id',
+                'books.publisher_id',
+                'books.created_at',
+                'books.updated_at'
+            ])
+            ->orderByDesc('borrow_count')
             ->take(5)
             ->get();
 
@@ -34,17 +68,31 @@ class AdminController extends Controller
             'totalUsers',
             'activeBorrowings',
             'totalCategories',
-            'recentBorrowings'
+            'recentBorrowings',
+            'mostBorrowedBooks'
         ));
     }
 
 
-    public function books()
+    public function books(Request $request)
     {
-        $books = Book::with(['category', 'authors', 'publisher'])
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+        $query = Book::with(['category', 'authors', 'publisher']);
 
+        // Arama filtresi
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('isbn', 'like', "%{$search}%");
+            });
+        }
+
+        // Kategori filtresi
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        $books = $query->orderBy('id', 'desc')->paginate(10);
         $categories = Categories::all();
         $publishers = Publisher::all();
         $genres = Genres::all();
@@ -146,11 +194,10 @@ class AdminController extends Controller
      */
     public function getBook($id)
     {
-        $book = Book::with(['authors'])->findOrFail($id);
+        $book = Book::with(['authors', 'publisher', 'category', 'genre'])->findOrFail($id);
 
         return response()->json([
-            'book' => $book,
-            'authorIds' => $book->authors->pluck('id')->toArray()
+            'book' => $book
         ]);
     }
 
