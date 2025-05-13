@@ -5,8 +5,10 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>KÜTÜPHANE</title>
-    @vite('resources/css/home.css')
-    @vite('resources/js/home.js')
+
+    <link rel="stylesheet" href="/css/home.css" />
+
+    <script src="/js/home.js"></script>
 
     <!-- Favicons -->
     <link href="assets/img/favicon.png" rel="icon">

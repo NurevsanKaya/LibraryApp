@@ -27,45 +27,65 @@
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold">{{ $book->name }}</h3>
-                                <div class="mt-2 space-y-1">
-                                    <p class="text-gray-600">
-                                        <span class="font-medium">Yazar:</span> 
-                                        {{ $book->authors->map(function($author) { return $author->fullName(); })->join(', ') }}
-                                    </p>
-                                    <p class="text-gray-600">
-                                        <span class="font-medium">Yayınevi:</span> 
-                                        {{ $book->publisher ? $book->publisher->name : 'Yayınevi bilgisi yok' }}
-                                    </p>
-                                    <p class="text-gray-600">
-                                        <span class="font-medium">Kategori:</span> 
-                                        {{ $book->category ? $book->category->name : 'Kategori bilgisi yok' }}
-                                    </p>
-                                    <p class="text-gray-600">
-                                        <span class="font-medium">ISBN:</span> 
-                                        {{ $book->isbn ?? 'ISBN bilgisi yok' }}
-                                    </p>
-                                    <p class="text-gray-600">
-                                        <span class="font-medium">Basım Yılı:</span> 
-                                        {{ $book->publication_year ?? 'Basım yılı bilgisi yok' }}
-                                    </p>
-                                    <p class="text-gray-600">
-                                        <span class="font-medium">Stok Durumu:</span> 
-                                        @php
-                                            $availableStocks = $book->stocks->where('status', 'available')->count();
-                                        @endphp
-                                        @if($availableStocks > 0)
-                                            <span class="text-green-600 font-medium">{{ $availableStocks }} adet mevcut</span>
-                                        @else
-                                            <span class="text-red-600 font-medium">Stokta yok</span>
-                                        @endif
-                                    </p>
+                                <div class="mt-2 grid grid-cols-2 gap-4">
+                                    <div class="space-y-1">
+                                        <p class="text-gray-600">
+                                            <span class="font-medium">Yazar:</span> 
+                                            {{ $book->authors->map(function($author) { return $author->fullName(); })->join(', ') }}
+                                        </p>
+                                        <p class="text-gray-600">
+                                            <span class="font-medium">Yayınevi:</span> 
+                                            {{ $book->publisher ? $book->publisher->name : 'Yayınevi bilgisi yok' }}
+                                        </p>
+                                        <p class="text-gray-600">
+                                            <span class="font-medium">Kategori:</span> 
+                                            {{ $book->category ? $book->category->name : 'Kategori bilgisi yok' }}
+                                        </p>
+                                        <p class="text-gray-600">
+                                            <span class="font-medium">ISBN:</span> 
+                                            {{ $book->isbn ?? 'ISBN bilgisi yok' }}
+                                        </p>
+                                        <p class="text-gray-600">
+                                            <span class="font-medium">Basım Yılı:</span> 
+                                            {{ $book->publication_year ?? 'Basım yılı bilgisi yok' }}
+                                        </p>
+                                        <p class="text-gray-600">
+                                            <span class="font-medium">Stok Durumu:</span> 
+                                            @php
+                                                $availableStocks = $book->stocks->where('status', 'available')->count();
+                                            @endphp
+                                            @if($availableStocks > 0)
+                                                <span class="text-green-600 font-medium">{{ $availableStocks }} adet mevcut</span>
+                                            @else
+                                                <span class="text-red-600 font-medium">Stokta yok</span>
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="text-gray-600">
+                                            <span class="font-medium">Yer Bilgisi:</span>
+                                            @if($book->stocks->where('status', 'available')->first())
+                                                @php
+                                                    $stock = $book->stocks->where('status', 'available')->first();
+                                                    $shelf = $stock->shelf;
+                                                    $bookshelf = $shelf->bookshelf;
+                                                    $location = $bookshelf->location;
+                                                @endphp
+                                                <div class="mt-1">
+                                                    <p><span class="font-medium">Bina:</span> {{ $location->building_number ?? 'Belirtilmemiş' }}</p>
+                                                    <p><span class="font-medium">Oda:</span> {{ $location->room_number ?? 'Belirtilmemiş' }}</p>
+                                                    <p><span class="font-medium">Kat:</span> {{ $location->floor_number ?? 'Belirtilmemiş' }}</p>
+                                                    <p><span class="font-medium">Kitaplık:</span> {{ $bookshelf->bookshelf_number ?? 'Belirtilmemiş' }}</p>
+                                                    <p><span class="font-medium">Raf:</span> {{ $shelf->shelf_number ?? 'Belirtilmemiş' }}</p>
+                                                </div>
+                                            @else
+                                                <span class="text-red-600">Stokta olmadığı için yer bilgisi mevcut değil</span>
+                                            @endif
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                             <div class="ml-4 flex flex-col items-end">
-                                <a href="{{ route('books.show', $book->id) }}" 
-                                   class="detail-button">
-                                    Detay
-                                </a>
                                 @if($availableStocks > 0)
                                     <span class="mt-2 text-sm text-green-600">
                                         <i class="fas fa-check-circle"></i> Ödünç alınabilir
