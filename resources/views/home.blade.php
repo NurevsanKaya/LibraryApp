@@ -4,7 +4,7 @@
 
     <!-- Hero Section -->
     <section id="hero" class="hero section dark-background">
-        <img src="https://images.pexels.com/photos/1290141/pexels-photo-1290141.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="" data-aos="fade-in">
+        <img src="{{ asset('pexels-photo-1290141.jpeg') }}" alt="" data-aos="fade-in">
 
         <div class="container">
             <div class="row">
