@@ -52,11 +52,9 @@
                     <ul>
                         <li><a href="{{ url('/information') }}">Genel Bilgi</a></li>
                         <li><a href="{{ url('/mission') }}">Misyon & Vizyon</a></li>
-                        <li><a href="{{ url('direction') }}">Kütüphane Yönergesi</a></li>
                         <li><a href="{{ url('/hours') }}">Çalışma Saatleri</a></li>
                     </ul>
                 </li>
-                <li><a href="{{ url('/services') }}">HİZMETLER VE OLANAKLAR</a></li>
                 <li><a href="{{ route('login') }}">KÜTÜPHANE HESABIM</a></li>
 
                 <li><a href="{{ url('/contact') }}">İLETİŞİM</a></li>
