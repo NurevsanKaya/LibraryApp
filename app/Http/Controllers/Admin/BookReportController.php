@@ -11,6 +11,9 @@ use App\Models\Publisher;
 use App\Models\AcquisitionSource;
 use App\Models\Author;
 use App\Models\User;
+use App\Models\Location;
+use App\Models\Bookshelf;
+use App\Models\Shelf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +34,9 @@ class BookReportController extends Controller
         $publishers = Publisher::all();
         $acquisitionSources = AcquisitionSource::all();
         $authors = Author::all();
+        $locations = Location::all();
+        $bookshelves = Bookshelf::with('location')->get();
+        $shelves = Shelf::with('bookshelf')->get();
 
         return view('admin.book-reports.index', compact(
             'totalBooks',
@@ -39,7 +45,10 @@ class BookReportController extends Controller
             'categories',
             'publishers',
             'acquisitionSources',
-            'authors'
+            'authors',
+            'locations',
+            'bookshelves',
+            'shelves'
         ));
     }
 
@@ -75,6 +84,27 @@ class BookReportController extends Controller
         }
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
+        }
+
+        // Lokasyon ve Raf Filtreleri
+        if ($request->filled('location')) {
+            $query->whereHas('stocks', function ($q) use ($request) {
+                $q->whereHas('shelf.bookshelf.location', function ($q) use ($request) {
+                    $q->where('id', $request->location);
+                });
+            });
+        }
+        if ($request->filled('bookcase')) {
+            $query->whereHas('stocks', function ($q) use ($request) {
+                $q->whereHas('shelf.bookshelf', function ($q) use ($request) {
+                    $q->where('id', $request->bookcase);
+                });
+            });
+        }
+        if ($request->filled('shelf')) {
+            $query->whereHas('stocks', function ($q) use ($request) {
+                $q->where('shelf_id', $request->shelf);
+            });
         }
 
         // Durum filtreleri

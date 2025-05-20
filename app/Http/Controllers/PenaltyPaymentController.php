@@ -26,8 +26,11 @@ class PenaltyPaymentController extends Controller
     public function reject($id)
     {
         $penalty = PenaltyPayment::findOrFail($id);
-        $penalty->update(['status' => 'reddedildi']);
-        return back()->with('success', 'Ceza ödemesi reddedildi.');
+        $penalty->update([
+            'status' => 'ödeme bekleniyor',
+            'receipt_path' => null // Dekontu temizle
+        ]);
+        return back()->with('success', 'Ceza ödemesi reddedildi. Kullanıcı tekrar ödeme yapabilir.');
     }
 
     /**

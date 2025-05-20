@@ -50,10 +50,8 @@
                                 <span class="bg-green-100 text-green-800 px-2 py-1 text-xs rounded-full">Onaylandı</span>
                             @elseif($penalty->status === 'bekliyor')
                                 <span class="bg-yellow-100 text-yellow-800 px-2 py-1 text-xs rounded-full">Bekliyor</span>
-                            @elseif($penalty->status === 'reddedildi')
-                                <span class="bg-red-100 text-red-800 px-2 py-1 text-xs rounded-full">Reddedildi</span>
-                            @else
-                                <span class="bg-gray-100 text-gray-700 px-2 py-1 text-xs rounded-full">Bekleniyor</span>
+                            @elseif($penalty->status === 'ödeme bekleniyor')
+                                <span class="bg-gray-100 text-gray-700 px-2 py-1 text-xs rounded-full">Ödeme Bekleniyor</span>
                             @endif
                         </td>
                         <td class="px-4 py-3">{{ \Carbon\Carbon::parse($penalty->payment_date)->format('d.m.Y') }}</td>

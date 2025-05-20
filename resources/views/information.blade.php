@@ -39,7 +39,7 @@
     <div class="container-xl position-relative d-flex align-items-center justify-content-between">
 
 
-        <a href="index.html" class="logo d-flex align-items-center">
+        <a href="{{ url('/') }}" class="logo d-flex align-items-center">
             <!-- Uncomment the line below if you also wish to use an image logo -->
             <!-- <img src="assets/img/logo.png" alt=""> -->
             <h1 class="sitename">KÜTÜPHANE.</h1>
@@ -55,7 +55,6 @@
                         <li><a href="{{ url('/hours') }}">Çalışma Saatleri</a></li>
                     </ul>
                 </li>
-                <li><a href="{{ route('login') }}">KÜTÜPHANE HESABIM</a></li>
 
                 <li><a href="{{ url('/contact') }}">İLETİŞİM</a></li>
             </ul>

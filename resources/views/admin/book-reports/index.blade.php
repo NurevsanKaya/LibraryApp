@@ -124,6 +124,35 @@
                 </select>
             </div>
 
+            <!-- Lokasyon ve Raf Filtreleri -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Lokasyon</label>
+                <select name="location" id="location" class="w-full rounded-md border-gray-300">
+                    <option value="">Seçiniz</option>
+                    @foreach($locations as $location)
+                        <option value="{{ $location->id }}">
+                            Bina: {{ $location->building_number }} - 
+                            Kat: {{ $location->floor_number }} - 
+                            Oda: {{ $location->room_number }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kitaplık</label>
+                <select name="bookcase" id="bookcase" class="w-full rounded-md border-gray-300" disabled>
+                    <option value="">Önce lokasyon seçiniz</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Raf</label>
+                <select name="shelf" id="shelf" class="w-full rounded-md border-gray-300" disabled>
+                    <option value="">Önce kitaplık seçiniz</option>
+                </select>
+            </div>
+
             <!-- Durum Filtreleri -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Durum</label>
@@ -193,12 +222,75 @@
 </div>
 
 <script>
-// Sayfa yüklendiğinde çalışacak kodlar
 document.addEventListener('DOMContentLoaded', function() {
-    // Gerekli elementleri seçelim
     const form = document.getElementById('filterForm');
     const resultsDiv = document.getElementById('results');
     const quickFilterButtons = document.querySelectorAll('.quick-filter');
+    const locationSelect = document.getElementById('location');
+    const bookcaseSelect = document.getElementById('bookcase');
+    const shelfSelect = document.getElementById('shelf');
+    const bookshelves = {!! json_encode($bookshelves) !!};
+    const shelves = {!! json_encode($shelves) !!};
+
+    // Lokasyon değiştiğinde kitaplıkları güncelle
+    locationSelect.addEventListener('change', function() {
+        const selectedLocationId = this.value;
+        
+        // Kitaplık seçimini sıfırla
+        bookcaseSelect.innerHTML = '<option value="">Kitaplık Seçiniz</option>';
+        
+        if (selectedLocationId) {
+            // Seçilen lokasyona ait kitaplıkları filtrele
+            const filteredBookshelves = bookshelves.filter(bookshelf => bookshelf.location_id == selectedLocationId);
+            
+            // Kitaplık seçimini aktif et
+            bookcaseSelect.disabled = false;
+            
+            // Filtrelenmiş kitaplıkları ekle
+            filteredBookshelves.forEach(bookshelf => {
+                const option = document.createElement('option');
+                option.value = bookshelf.id;
+                option.textContent = `Kitaplık ${bookshelf.bookshelf_number}`;
+                bookcaseSelect.appendChild(option);
+            });
+        } else {
+            // Lokasyon seçili değilse kitaplık seçimini devre dışı bırak
+            bookcaseSelect.disabled = true;
+            bookcaseSelect.innerHTML = '<option value="">Önce lokasyon seçiniz</option>';
+        }
+
+        // Raf seçimini sıfırla
+        shelfSelect.disabled = true;
+        shelfSelect.innerHTML = '<option value="">Önce kitaplık seçiniz</option>';
+    });
+
+    // Kitaplık değiştiğinde rafları güncelle
+    bookcaseSelect.addEventListener('change', function() {
+        const selectedBookcaseId = this.value;
+        
+        // Raf seçimini sıfırla
+        shelfSelect.innerHTML = '<option value="">Raf Seçiniz</option>';
+        
+        if (selectedBookcaseId) {
+            // Seçilen kitaplığa ait rafları filtrele
+            const filteredShelves = shelves.filter(shelf => shelf.bookshelf_id == selectedBookcaseId);
+            
+            // Raf seçimini aktif et
+            shelfSelect.disabled = false;
+            
+            // Filtrelenmiş rafları ekle
+            filteredShelves.forEach(shelf => {
+                const option = document.createElement('option');
+                option.value = shelf.id;
+                option.textContent = `Raf ${shelf.shelf_number}`;
+                shelfSelect.appendChild(option);
+            });
+        } else {
+            // Kitaplık seçili değilse raf seçimini devre dışı bırak
+            shelfSelect.disabled = true;
+            shelfSelect.innerHTML = '<option value="">Önce kitaplık seçiniz</option>';
+        }
+    });
 
     // Tüm hızlı filtre butonlarına tıklama olayı ekleyelim
     quickFilterButtons.forEach(button => {
