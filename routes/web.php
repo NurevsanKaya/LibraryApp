@@ -9,6 +9,7 @@ use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\UserOldBorrowController;
 use App\Http\Controllers\UserPenaltyController;
 use App\Http\Controllers\Admin\BookReportController;
+use App\Http\Controllers\ContactController;
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminMiddleware;
@@ -19,6 +20,7 @@ use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\BorrowingController;
 use App\Http\Controllers\AcquisitionSourceController;
+use App\Http\Controllers\Admin\MessageController;
 
 Route::get('/', function () {
     return view('home');
@@ -48,6 +50,7 @@ Route::get('/myaccount', function () {
 Route::get('/contact', function () {
     return view('contact');
 });
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/search', [BookController::class, 'search'])->name('search');
 Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
 
@@ -65,6 +68,11 @@ Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(func
 
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
+    // Mesajlar
+    Route::get('/messages', [MessageController::class, 'index'])->name('admin.messages.index');
+    Route::get('/messages/{message}', [MessageController::class, 'show'])->name('admin.messages.show');
+    Route::post('/messages/{message}/reply', [MessageController::class, 'reply'])->name('admin.messages.reply');
 
     // Kitap Raporlama
     Route::get('/book-reports', [BookReportController::class, 'index'])->name('admin.book-reports.index');
@@ -156,5 +164,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/overdue', [App\Http\Controllers\User\OverdueController::class, 'index'])->name('user.overdue');
 
 });
+
+
 
 require __DIR__.'/auth.php';

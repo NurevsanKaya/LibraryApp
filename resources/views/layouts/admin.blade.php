@@ -151,6 +151,12 @@
                                 Kitap Raporları
                             </a>
                         </li>
+                        <li class="mb-3">
+                            <a href="{{ route('admin.messages.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-md {{ request()->routeIs('admin.messages.*') ? 'bg-gray-200' : '' }}">
+                                <i class="fas fa-envelope mr-3"></i>
+                                Mesajlar
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>

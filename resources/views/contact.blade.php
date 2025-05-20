@@ -57,33 +57,56 @@
                 </div>
 
                 <div class="col-lg-6">
-                    <form action="forms/contact.php" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="200">
+                    <form action="{{ route('contact.store') }}" method="POST" class="php-email-form" data-aos="fade-up" data-aos-delay="200">
+                        @csrf
                         <div class="row gy-4">
+                            @if (session('success'))
+                                <div class="col-12">
+                                    <div class="alert alert-success" role="alert">
+                                        {{ session('success') }}
+                                    </div>
+                                </div>
+                            @endif
 
                             <div class="col-md-6">
-                                <input type="text" name="name" class="form-control" placeholder="Adınız" required="">
+                                <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" placeholder="Adınız" value="{{ old('name') }}" required>
+                                @error('name')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
                             </div>
 
                             <div class="col-md-6">
-                                <input type="email" class="form-control" name="email" placeholder="E-posta Adresiniz" required="">
+                                <input type="email" class="form-control @error('email') is-invalid @enderror" name="email" placeholder="E-posta Adresiniz" value="{{ old('email') }}" required>
+                                @error('email')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
                             </div>
 
                             <div class="col-12">
-                                <input type="text" class="form-control" name="subject" placeholder="Konu" required="">
+                                <input type="text" class="form-control @error('subject') is-invalid @enderror" name="subject" placeholder="Konu" value="{{ old('subject') }}" required>
+                                @error('subject')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
                             </div>
 
                             <div class="col-12">
-                                <textarea class="form-control" name="message" rows="6" placeholder="Mesajınız" required=""></textarea>
+                                <textarea class="form-control @error('message') is-invalid @enderror" name="message" rows="6" placeholder="Mesajınız" required>{{ old('message') }}</textarea>
+                                @error('message')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
                             </div>
 
                             <div class="col-12 text-center">
-                                <div class="loading">Gönderiliyor...</div>
-                                <div class="error-message"></div>
-                                <div class="sent-message">Mesajınız başarıyla gönderildi. Teşekkür ederiz!</div>
-
                                 <button type="submit">Mesaj Gönder</button>
                             </div>
-
                         </div>
                     </form>
                 </div><!-- İletişim Formu Sonu -->
@@ -93,5 +116,4 @@
         </div>
 
     </section><!-- /İletişim Bölümü -->
-
 @endsection
