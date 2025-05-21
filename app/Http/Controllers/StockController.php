@@ -18,7 +18,9 @@ class StockController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Stock::with(['book', 'shelf', 'acquisitionSource']);
+        $query = Stock::with(['book', 'shelf', 'acquisitionSource', 'borrowings' => function($q) {
+            $q->whereNull('return_date');
+        }]);
 
         // Debug için log ekle
         Log::info('Stok Filtresi:', [
@@ -30,7 +32,29 @@ class StockController extends Controller
 
         // Filtrele
         if ($request->has('status') && $request->status !== '') {
-            $query->where('status', $request->status);
+            if ($request->status === 'borrowed') {
+                // Ödünç verilen kitaplar için özel sorgu
+                $query->where(function($q) {
+                    $q->where('status', 'borrowed')
+                      ->orWhereHas('borrowings', function($q) {
+                          $q->whereNull('return_date')
+                            ->where('due_date', '<', now());
+                      });
+                });
+
+                // Gecikmiş kitapların status'ünü güncelle
+                $stocksToUpdate = Stock::whereHas('borrowings', function($q) {
+                    $q->whereNull('return_date')
+                      ->where('due_date', '<', now());
+                })->where('status', '!=', 'borrowed')->get();
+
+                foreach ($stocksToUpdate as $stock) {
+                    $stock->update(['status' => 'borrowed']);
+                }
+            } else {
+                $query->where('status', $request->status);
+            }
+            
             // Debug için log ekle
             Log::info('Filtreleme uygulandı:', [
                 'status' => $request->status,
