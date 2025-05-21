@@ -84,7 +84,6 @@
                                 <th class="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alınma Tarihi</th>
                                 <th class="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teslim Tarihi</th>
                                 <th class="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
-                                <th class="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200" id="activeTableBody">
@@ -130,17 +129,8 @@
                                             {{ $statusText }}
                                         </span>
                                     </td>
-                                    <!--
-                                    <td class="py-3 px-4 text-sm">
-                                        <a href="{{ route('admin.borrowings.show', $borrowing->id) }}" class="text-blue-500 hover:text-blue-700">
-                                            <i class="fas fa-eye mr-1"></i> Detay
-                                        </a>
-                                        @if(!$borrowing->extended_return_date && $diffDays >= 0)
-                                            <a href="{{ route('admin.borrowings.show', $borrowing->id) }}" class="text-green-500 hover:text-green-700 ml-2">
-                                                <i class="fas fa-calendar-plus mr-1"></i> Süre Uzat
-                                            </a>
-                                        @endif
-                                    </td> -->
+                                    
+                                    
                                 </tr>
                             @endforeach
                         </tbody>

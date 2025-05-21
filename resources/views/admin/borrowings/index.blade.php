@@ -41,21 +41,44 @@
     <!-- Filtreler -->
     <div class="mb-6 flex flex-col md:flex-row gap-4">
         <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1 text-white">.</label>
             <input type="text" id="borrowingSearch" placeholder="Arama yapabilirsiniz..." class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="{{ request('search') }}">
         </div>
         <!-- Tarih Aralığı Filtreleri -->
         <div class="flex gap-4">
-            <input type="date" id="startDate" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="{{ request('start_date') }}">
-            <input type="date" id="endDate" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="{{ request('end_date') }}">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Başlangıç Tarihi</label>
+                <div class="flex items-center gap-2">
+                    <input type="date" id="startDate" name="start_date" value="{{ request('start_date') }}" 
+                        class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="relative">
+                        <i class="fas fa-info-circle text-gray-400 cursor-help hover:text-gray-600" 
+                           title="Bu tarihten sonra ödünç alınan kitaplar"></i>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bitiş Tarihi</label>
+                <div class="flex items-center gap-2">
+                    <input type="date" id="endDate" name="end_date" value="{{ request('end_date') }}" 
+                        class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="relative">
+                        <i class="fas fa-info-circle text-gray-400 cursor-help hover:text-gray-600" 
+                           title="Bu tarihten önce ödünç alınan kitaplar"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="flex gap-4">
+            
             <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">Tüm Durumlar</option>
                 <option value="borrowed" {{ request('status') == 'borrowed' ? 'selected' : '' }}>Ödünç Verilmiş</option>
                 <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>İade Edilmiş</option>
                 <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Gecikmiş</option>
             </select>
+            
             <button class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md" onclick="filterBorrowings()">
                 <i class="fas fa-filter mr-2"></i> Filtrele
             </button>

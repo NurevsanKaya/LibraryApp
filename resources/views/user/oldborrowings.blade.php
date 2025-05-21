@@ -22,13 +22,29 @@
                     <tbody class="divide-y divide-gray-200">
                     @foreach($borrowings as $item)
                         <tr>
-                            <td class="px-6 py-4 font-medium">{{ $item->stock->book->name }}</td>
-                            <td class="px-6 py-4">
-                                @foreach($item->stock->book->authors as $author)
-                                    {{ $author->first_name }} {{ $author->last_name }}@if(!$loop->last), @endif
-                                @endforeach
+                            <td class="px-6 py-4 font-medium">
+                                @if($item->stock && $item->stock->book)
+                                    {{ $item->stock->book->name }}
+                                @else
+                                    <span class="text-gray-500">Silinmiş Kitap</span>
+                                @endif
                             </td>
-                            <td class="px-6 py-4">{{ $item->stock->book->category->name ?? 'N/A' }}</td>
+                            <td class="px-6 py-4">
+                                @if($item->stock && $item->stock->book && $item->stock->book->authors)
+                                    @foreach($item->stock->book->authors as $author)
+                                        {{ $author->first_name }} {{ $author->last_name }}@if(!$loop->last), @endif
+                                    @endforeach
+                                @else
+                                    <span class="text-gray-500">Belirtilmemiş</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($item->stock && $item->stock->book && $item->stock->book->category)
+                                    {{ $item->stock->book->category->name }}
+                                @else
+                                    <span class="text-gray-500">N/A</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4">{{ $item->borrow_date->format('d.m.Y') }}</td>
                             <td class="px-6 py-4">{{ $item->due_date->format('d.m.Y') }}</td>
                             <td class="px-6 py-4 text-green-600 font-semibold">

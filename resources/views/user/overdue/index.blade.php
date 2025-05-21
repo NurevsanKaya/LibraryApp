@@ -39,6 +39,7 @@
                                 </td>
                                 <td class="py-3 px-4 border-b border-gray-200">
                                     <div class="text-sm">
+                                        <div class="text-gray-600">Temel Ceza: {{ number_format($book['base_penalty']) }} TL</div>
                                         <div class="text-gray-600">Günlük: {{ number_format($book['daily_penalty']) }} TL</div>
                                         <div class="font-semibold text-red-600">Toplam: {{ number_format($book['current_penalty']) }} TL</div>
                                     </div>

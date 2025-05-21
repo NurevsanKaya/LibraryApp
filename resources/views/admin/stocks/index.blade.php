@@ -208,15 +208,8 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
 
-                    <!-- Durum -->
-                    <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Durum</label>
-                        <select name="status" id="status" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            <option value="available">Rafta Mevcut</option>
-                            <option value="borrowed">Ödünç Verilmiş</option>
-                        </select>
-                    </div>
+                    <!-- Durum - Gizli input olarak eklendi -->
+                    <input type="hidden" name="status" value="available">
 
                 
                 </div>
@@ -267,8 +260,8 @@
                                     <dd id="stockBookName" class="text-sm text-gray-900"></dd>
                                 </div>
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500">Raf</dt>
-                                    <dd id="stockShelf" class="text-sm text-gray-900"></dd>
+                                    <dt class="text-sm font-medium text-gray-500">Yer Bilgisi</dt>
+                                    <dd id="stockLocation" class="text-sm text-gray-900"></dd>
                                 </div>
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">Durum</dt>
@@ -324,6 +317,11 @@
                 form.action = `/admin/stocks/${stockId}`;
                 document.getElementById('form-method').value = 'PUT';
                 bookSearchSection.classList.add('hidden');
+                
+                // Düzenleme modunda raf seçimini aktif et
+                shelfSelect.disabled = false;
+                
+                // Mevcut stok verilerini yükle
                 loadStockData(stockId);
             } else if (mode === 'view') {
                 modalTitle.textContent = 'Stok Detayları';
@@ -463,7 +461,6 @@
             const spinner = document.getElementById('loadingSpinner');
             const form = document.getElementById('stockForm');
             
-            // Yükleme başladığında
             spinner.classList.remove('hidden');
             form.classList.add('hidden');
 
@@ -476,11 +473,10 @@
                     
                     // Form alanlarını doldur
                     document.getElementById('barcode').value = stock.barcode;
-                    document.getElementById('acquisition_source_id').value = stock.acquisition_source;
+                    document.getElementById('acquisition_source_id').value = stock.acquisition_source_id;
                     document.getElementById('acquisition_price').value = stock.acquisition_price;
                     document.getElementById('acquisition_date').value = stock.acquisition_date;
                     document.getElementById('selected_book_id').value = stock.book_id;
-                    document.getElementById('status').value = stock.status;
 
                     // Raf seçimini güncelle
                     const shelfSelect = document.getElementById('shelf_id');
@@ -501,13 +497,11 @@
                             <p><strong>Yazar:</strong> ${stock.book.authors ? stock.book.authors.map(a => `${a.first_name} ${a.last_name}`).join(', ') : ''}</p>
                         `;
                         document.getElementById('selectedBookInfo').classList.remove('hidden');
-                        document.getElementById('bookSearchSection').classList.add('hidden');
                     }
                 }
             } catch (error) {
                 console.error('Stok verisi yüklenirken hata:', error);
             } finally {
-                // Yükleme tamamlandığında
                 spinner.classList.add('hidden');
                 form.classList.remove('hidden');
             }
@@ -590,9 +584,30 @@
                     // Detayları doldur
                     document.getElementById('stockBarcode').textContent = data.stock.barcode;
                     document.getElementById('stockBookName').textContent = data.stock.book ? data.stock.book.name : 'Belirtilmemiş';
-                    document.getElementById('stockShelf').textContent = data.stock.shelf ? data.stock.shelf.shelf_number : 'Belirtilmemiş';
+                    
+                    // Yer bilgisi
+                    let locationHtml = '';
+                    if (data.stock.shelf && data.stock.shelf.bookshelf && data.stock.shelf.bookshelf.location) {
+                        const location = data.stock.shelf.bookshelf.location;
+                        const bookshelf = data.stock.shelf.bookshelf;
+                        const shelf = data.stock.shelf;
+                        
+                        locationHtml = `
+                            <div class="mt-1">
+                                <p><span class="font-medium">Bina:</span> ${location.building_number || 'Belirtilmemiş'}</p>
+                                <p><span class="font-medium">Oda:</span> ${location.room_number || 'Belirtilmemiş'}</p>
+                                <p><span class="font-medium">Kat:</span> ${location.floor_number || 'Belirtilmemiş'}</p>
+                                <p><span class="font-medium">Kitaplık:</span> ${bookshelf.bookshelf_number || 'Belirtilmemiş'}</p>
+                                <p><span class="font-medium">Raf:</span> ${shelf.shelf_number || 'Belirtilmemiş'}</p>
+                            </div>
+                        `;
+                    } else {
+                        locationHtml = '<span class="text-red-600">Yer bilgisi mevcut değil</span>';
+                    }
+                    document.getElementById('stockLocation').innerHTML = locationHtml;
+                    
                     document.getElementById('stockStatus').textContent = data.stock.status === 'available' ? 'Rafta Mevcut' : 'Ödünç Verilmiş';
-                    document.getElementById('stockAcquisitionSource').textContent = data.stock.acquisition_source ? data.stock.acquisition_source : 'Belirtilmemiş';
+                    document.getElementById('stockAcquisitionSource').textContent = data.stock.acquisition_source ? data.stock.acquisition_source.name : 'Belirtilmemiş';
                     document.getElementById('stockAcquisitionDate').textContent = data.stock.acquisition_date ? data.stock.acquisition_date : 'Belirtilmemiş';
                     document.getElementById('stockAcquisitionPrice').textContent = data.stock.acquisition_price ? data.stock.acquisition_price + ' TL' : 'Belirtilmemiş';
 

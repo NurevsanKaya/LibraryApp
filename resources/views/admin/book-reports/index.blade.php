@@ -161,7 +161,6 @@
                     <option value="available">Rafta</option>
                     <option value="borrowed">Ödünçte</option>
                     <option value="overdue">Gecikmiş</option>
-                    <option value="reserved">Rezerve</option>
                 </select>
             </div>
 

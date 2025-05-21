@@ -123,14 +123,12 @@ class BookReportController extends Controller
                 case 'overdue':
                     $query->whereHas('stocks.borrowings', function ($q) {
                         $q->whereNull('return_date')
-                            ->where('due_date', '<', Carbon::now());
+                        ->where('borrowings.return_date', null)  // İade edilmemiş olanlar
+                        ->where('borrowings.due_date', '<', Carbon::now())  // Süresi geçmiş olanlar
+                        ->where('borrowings.status', 'active') ; // Aktif ödünç işlemleri
                     });
                     break;
-                case 'reserved':
-                    $query->whereHas('stocks', function ($q) {
-                        $q->where('status', 'reserved');
-                    });
-                    break;
+                
             }
         }
 

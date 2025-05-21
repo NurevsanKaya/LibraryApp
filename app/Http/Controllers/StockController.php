@@ -52,7 +52,7 @@ class StockController extends Controller
                     $stock->update(['status' => 'borrowed']);
                 }
             } else {
-                $query->where('status', $request->status);
+            $query->where('status', $request->status);
             }
             
             // Debug için log ekle
@@ -100,13 +100,10 @@ class StockController extends Controller
             'acquisition_source_id' => 'nullable|exists:acquisition_source,id',
             'acquisition_price' => 'nullable|numeric|min:0',
             'acquisition_date' => 'nullable|date',
-            'status' => 'required|in:available,borrowed',
         ]);
 
-        // Status değerini available olarak ayarla
-        if (!isset($validated['status'])) {
-            $validated['status'] = 'available';
-        }
+        // Status değerini her zaman available olarak ayarla
+        $validated['status'] = 'available';
 
         Stock::create($validated);
 
@@ -119,7 +116,7 @@ class StockController extends Controller
      */
     public function show(Stock $stock)
     {
-        $stock->load(['book', 'shelf']);
+        $stock->load(['book', 'shelf.bookshelf.location', 'acquisitionSource']);
         return response()->json(['stock' => $stock]);
     }
 
@@ -211,7 +208,7 @@ class StockController extends Controller
             $stockCount = Stock::where('shelf_id', $existingShelf->shelf_id)->count();
             if ($stockCount < 10) {
                 $shelf = Shelf::find($existingShelf->shelf_id);
-                $shelf->stock_count = $stockCount;// normalde shelftte stock_count yok ama biz yazıp ona bir değer atarsak o anlık var oluyor 
+                $shelf->stock_count = $stockCount;
                 return response()->json([
                     'shelves' => [$shelf],
                     'message' => 'Aynı kitap bu rafta bulunuyor'
@@ -225,7 +222,13 @@ class StockController extends Controller
             ->where('genre_id', $book->genres_id)
             ->get();
 
-        if (!$bookShelves->isEmpty()) {
+        // Bu kategori ve türde daha önce kitap eklenmiş mi kontrol et
+        $hasExistingBooks = Stock::whereHas('book', function($query) use ($book) {
+            $query->where('category_id', $book->category_id)
+                  ->where('genres_id', $book->genres_id);
+        })->exists();
+
+        if ($hasExistingBooks && !$bookShelves->isEmpty()) {
             // Tüm rafları al ve doluluk kontrolü yap
             $shelves = $bookShelves->flatMap->shelves
                 ->filter(function ($shelf) {
@@ -245,12 +248,35 @@ class StockController extends Controller
             }
         }
 
-        // Eğer uygun raf bulunamazsa boş rafları getir
-        $emptyShelvesFromAllBookshelves = Shelf::with('stocks')
+        // Eğer bu kategori ve türde hiç kitap yoksa veya uygun raf bulunamazsa
+        // sadece tamamen boş rafları getir
+        $emptyShelves = Shelf::with('stocks')
+            ->get()
+            ->filter(function ($shelf) {
+                return $shelf->stocks->count() === 0;
+            })
+            ->map(function ($shelf) {
+                $shelf->stock_count = 0;
+                return $shelf;
+            });
+
+        if (!$emptyShelves->isEmpty()) {
+            return response()->json([
+                'shelves' => $emptyShelves->values(),
+                'message' => 'Boş raflar'
+            ]);
+        }
+
+        // Hiç boş raf yoksa, en az dolu olan rafları getir
+        $leastFilledShelves = Shelf::with('stocks')
             ->get()
             ->filter(function ($shelf) {
                 return $shelf->stocks->count() < 10;
             })
+            ->sortBy(function ($shelf) {
+                return $shelf->stocks->count();
+            })
+            ->take(5)
             ->map(function ($shelf) {
                 $stockCount = $shelf->stocks->count();
                 $shelf->stock_count = $stockCount;
@@ -258,8 +284,8 @@ class StockController extends Controller
             });
 
         return response()->json([
-            'shelves' => $emptyShelvesFromAllBookshelves->values(),
-            'message' => 'Boş raflar'
+            'shelves' => $leastFilledShelves->values(),
+            'message' => 'En az dolu raflar'
         ]);
     }
 }
